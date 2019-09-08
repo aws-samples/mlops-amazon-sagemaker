@@ -24,6 +24,8 @@ This repository demonstrates the following use cases covering reference pipeline
 
 * **[Reference Pipeline #1:](../master/1-Built-In-Algorithm/README.md)** Pipeline using Amazon SageMaker built-in algorithm 
 
-* **[Reference Pipeline #2:](../master/2-Bring-Your-Own/README.md)** Pipeline using Amazon Sagemaker and bring-your-own algorithm## License
+* **[Reference Pipeline #2:](../master/2-Bring-Your-Own/README.md)** Pipeline using Amazon Sagemaker and bring-your-own algorithm
+
+## License
 
 This library is licensed under the Apache 2.0 License. 
