@@ -1,0 +1,110 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: MLOps-Workshop-BYO-LabSetup
+Parameters: 
+  UniqueID: 
+    Type: String
+    Default: yourinitials
+    Description: Enter your initials in lower case as a unique identifier for components created 
+    AllowedPattern: "^([a-z]|(d(?!d{0,2}.d{1,3}.d{1,3}.d{1,3})))([a-zd]|(.(?!(.|-)))|(-(?!.))){1,61}[a-zd.]$"
+
+Resources:
+
+  S3DataBucket:
+    Type: AWS::S3::Bucket
+    Properties: 
+      AccessControl: BucketOwnerFullControl
+      VersioningConfiguration: 
+        Status: Enabled
+      BucketName:
+        Fn::Join:
+          - ""
+          - - "mlops-data-"
+            - !Ref UniqueID
+            - "-"
+            - !Select
+             - 0
+             - !Split
+              - "-"
+              - !Select
+                - 2
+                - !Split
+                  - "/"
+                  - !Ref "AWS::StackId"
+            
+  S3LambdaFunctionCode:
+    Type: AWS::S3::Bucket
+    Properties: 
+      AccessControl: BucketOwnerFullControl
+      VersioningConfiguration: 
+        Status: Enabled
+      BucketName:
+        Fn::Join:
+          - ""
+          - - "mlops-lambda-code-"
+            - !Ref UniqueID
+            - "-"
+            - !Select
+             - 0
+             - !Split
+              - "-"
+              - !Select
+                - 2
+                - !Split
+                  - "/"
+                  - !Ref "AWS::StackId"
+
+  CodeCommitRepo:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: 
+        Fn::Join:
+          - ""
+          - - "mlops-codecommit-byo-"
+            - !Ref UniqueID
+      RepositoryDescription: "MLOps BYO Code Commit Repository"
+ 
+  SageMakerNotebookInstance:
+    Type: AWS::SageMaker::NotebookInstance
+    Properties: 
+      DefaultCodeRepository: !GetAtt CodeCommitRepo.CloneUrlHttp
+      InstanceType: ml.t3.medium
+      NotebookInstanceName: 
+        Fn::Join:
+            - ""
+            - - "MLOps-BYO-Notebook-"
+              - !Ref UniqueID
+      RoleArn: !GetAtt [SageMakerNotebookInstanceRole, Arn]
+    DependsOn: CodeCommitRepo
+    
+  SageMakerNotebookInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: sagemaker.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
+          - arn:aws:iam::aws:policy/AmazonS3FullAccess
+          - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess     
+      RoleName: 
+        Fn::Join:
+           - ""
+           - - "MLOps-SageMakerNotebookInstance-ServiceRole-"
+             - !Ref UniqueID
+
+Outputs:
+      SageMakerNotebookInstance:
+        Description: The ID of the SageMaker Notebook Instance
+        Value: !Ref SageMakerNotebookInstance
+      CodeCommitRepo:
+        Description: The ID of the CodeCommit Repository
+        Value: !Ref CodeCommitRepo 
+      S3DataBucket:
+        Description: The ID of the S3 Bucket containing model training and test data
+        Value: !Ref S3DataBucket
+
+
