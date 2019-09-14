@@ -1,0 +1,564 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: MLOps-Workshop-BYO
+Parameters: 
+  UniqueID: 
+    Type: String
+    Default: yourinitials
+    Description: Enter your initials in lower case as a unique identifier for components created 
+    AllowedPattern: "^([a-z]|(d(?!d{0,2}.d{1,3}.d{1,3}.d{1,3})))([a-zd]|(.(?!(.|-)))|(-(?!.))){1,61}[a-zd.]$"
+  RepositoryBranch:
+    Type: String
+    Default: master
+    Description: Branch to trigger CodePipeline on commit. For this lab, you can leave this as master.
+  LambdaFunctionsBucket:
+    Type: String
+    Default: mlops-lambda-code-yourinitials-uniqueid
+    Description: S3 Bucket containing your Lambda Functions
+  
+Resources:
+  ElasticContainerRegistry:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: 
+        Fn::Join:
+          - ""
+          - - "mlops-ecr-byo-"
+            - !Ref UniqueID
+
+  CodePipelineArtifactBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: BucketOwnerFullControl
+      VersioningConfiguration: 
+        Status: Enabled
+      BucketName:
+        Fn::Join:
+          - ""
+          - - "mlops-codepipeline-artifacts-"
+            - !Ref UniqueID
+            - "-"
+            - !Select
+             - 0
+             - !Split
+              - "-"
+              - !Select
+                - 2
+                - !Split
+                  - "/"
+                  - !Ref "AWS::StackId"
+
+  ModelArtifactBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: BucketOwnerFullControl
+      VersioningConfiguration: 
+        Status: Enabled
+      BucketName:
+        Fn::Join:
+          - ""
+          - - "mlops-model-artifacts-"
+            - !Ref UniqueID
+            - "-"
+            - !Select
+             - 0
+             - !Split
+              - "-"
+              - !Select
+                - 2
+                - !Split
+                  - "/"
+                  - !Ref "AWS::StackId"
+
+  S3DataBucket:
+    Type: AWS::S3::Bucket
+    Properties: 
+      AccessControl: BucketOwnerFullControl
+      VersioningConfiguration: 
+        Status: Enabled
+      BucketName:
+        Fn::Join:
+          - ""
+          - - "mlops-data-"
+            - !Ref UniqueID
+            - "-"
+            - !Select
+             - 0
+             - !Split
+              - "-"
+              - !Select
+                - 2
+                - !Split
+                  - "/"
+                  - !Ref "AWS::StackId"
+
+  CodePipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties: 
+      RoleArn: !GetAtt [CodePipelineRole, Arn]
+      ArtifactStore:
+        Location:
+          Ref:
+            CodePipelineArtifactBucket
+        Type: S3
+      Stages: 
+        - 
+          Name: Source
+          Actions: 
+            - 
+              Name: SourceAction
+              ActionTypeId: 
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: CodeCommit
+              OutputArtifacts: 
+                - 
+                  Name: SourceArtifact
+              Configuration: 
+                BranchName: 
+                  Ref: RepositoryBranch
+                RepositoryName:
+                  Fn::Join:
+                    - ""
+                    - - "mlops-codecommit-byo-"
+                      - !Ref UniqueID
+              RunOrder: 1
+        - 
+          Name: Build
+          Actions: 
+            - 
+              Name: BuildImage
+              ActionTypeId: 
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              OutputArtifacts:
+                - Name: ImageBuild
+              InputArtifacts:
+                - Name: SourceArtifact
+              Configuration:
+                ProjectName: !Ref CodeBuildBYOImage
+              RunOrder: 1
+        - 
+          Name: TrainModel
+          Actions: 
+            - 
+              Name: StartTraining
+              ActionTypeId: 
+                Category: Invoke
+                Owner: AWS
+                Version: 1
+                Provider: Lambda
+              OutputArtifacts:
+                - Name: jobEventInfo
+              InputArtifacts:
+                - Name: ImageBuild
+              Configuration:
+                FunctionName: 
+                  Fn::Join:
+                    - ""
+                    - - "MLOps-BYO-StartTrain-"
+                      - !Ref UniqueID
+                UserParameters: ' {"traincompute": "ml.c4.2xlarge" , "traininstancevolumesize": 10, "traininstancecount": 1} '
+              RunOrder: 1
+            - 
+              Name: GetTrainingStatus
+              ActionTypeId: 
+                Category: Invoke
+                Owner: AWS
+                Version: 1
+                Provider: Lambda
+              OutputArtifacts:
+                - Name: CompletedTraining
+              InputArtifacts:
+                - Name: jobEventInfo
+              Configuration:
+                FunctionName: 
+                  Fn::Join:
+                    - ""
+                    - - "MLOps-BYO-GetStatus-"
+                      - !Ref UniqueID
+                UserParameters: ' { "stage": "Training"} '
+              RunOrder: 2
+        - 
+          Name: DeployModel-Dev
+          Actions: 
+            - 
+              Name: DeployToDevEnv
+              ActionTypeId: 
+                Category: Invoke
+                Owner: AWS
+                Version: 1
+                Provider: Lambda
+              OutputArtifacts:
+                - Name: HostingInfo
+              InputArtifacts:
+                - Name: CompletedTraining
+              Configuration:
+                FunctionName: 
+                  Fn::Join:
+                    - ""
+                    - - "MLOps-BYO-DeployModel-"
+                      - !Ref UniqueID
+                UserParameters: '{ "InitialInstanceCount": 1, "InitialVariantWeight": 1, "InstanceType": "ml.t2.medium", "EndpointConfigName": "Dev" }'
+              RunOrder: 1
+            - 
+              Name: GetDeployStatus
+              ActionTypeId: 
+                Category: Invoke
+                Owner: AWS
+                Version: 1
+                Provider: Lambda
+              OutputArtifacts:
+                - Name: CompletedDevDeploy
+              InputArtifacts:
+                - Name: HostingInfo
+              Configuration:
+                FunctionName: 
+                  Fn::Join:
+                    - ""
+                    - - "MLOps-BYO-GetStatus-"
+                      - !Ref UniqueID
+                UserParameters: ' { "stage": "Deployment"} '
+              RunOrder: 2
+            - 
+              Name: SmokeTest
+              ActionTypeId: 
+                Category: Invoke
+                Owner: AWS
+                Version: 1
+                Provider: Lambda
+              OutputArtifacts:
+                - Name: SmokeTestOut
+              InputArtifacts:
+                - Name: HostingInfo
+              Configuration:
+                FunctionName:   
+                  Fn::Join:
+                    - ""
+                    - - "MLOps-BYO-EvaluateModel-"
+                      - !Ref UniqueID
+                UserParameters: ' { "env": "Dev" } '
+              RunOrder: 3
+        - 
+          Name: DeployModel-Test
+          Actions: 
+            - 
+              Name: DeployToTestEnv
+              ActionTypeId: 
+                Category: Invoke
+                Owner: AWS
+                Version: 1
+                Provider: Lambda
+              OutputArtifacts:
+                - Name: HostingInfoTest
+              InputArtifacts:
+                - Name: CompletedTraining
+              Configuration:
+                FunctionName: 
+                  Fn::Join:
+                    - ""
+                    - - "MLOps-BYO-DeployModel-"
+                      - !Ref UniqueID
+                UserParameters: '{ "InitialInstanceCount": 1, "InitialVariantWeight": 1, "InstanceType": "ml.t2.medium", "EndpointConfigName": "Test" }'
+              RunOrder: 1
+            - 
+              Name: GetDeployStatus
+              ActionTypeId: 
+                Category: Invoke
+                Owner: AWS
+                Version: 1
+                Provider: Lambda
+              OutputArtifacts:
+                - Name: CompletedTestDeploy
+              InputArtifacts:
+                - Name: HostingInfoTest
+              Configuration:
+                FunctionName: 
+                  Fn::Join:
+                    - ""
+                    - - "MLOps-BYO-GetStatus-"
+                      - !Ref UniqueID
+                UserParameters: ' { "stage": "Deployment"} '
+              RunOrder: 2
+            - 
+              Name: FullTest
+              ActionTypeId: 
+                Category: Invoke
+                Owner: AWS
+                Version: 1
+                Provider: Lambda
+              OutputArtifacts:
+                - Name: FullTestOut
+              InputArtifacts:
+                - Name: HostingInfoTest
+              Configuration:
+                FunctionName:   
+                  Fn::Join:
+                    - ""
+                    - - "MLOps-BYO-EvaluateModel-"
+                      - !Ref UniqueID
+                UserParameters: '{ "env": "Test" } '
+              RunOrder: 3
+        - 
+          Name: DeployModel-Prod
+          Actions: 
+            - 
+              Name: DeployToProdEnv
+              ActionTypeId: 
+                Category: Invoke
+                Owner: AWS
+                Version: 1
+                Provider: Lambda
+              OutputArtifacts:
+                - Name: HostingInfoProd
+              InputArtifacts:
+                - Name: CompletedTraining
+              Configuration:
+                FunctionName: 
+                  Fn::Join:
+                    - ""
+                    - - "MLOps-BYO-DeployModel-"
+                      - !Ref UniqueID
+                UserParameters: '{ "InitialInstanceCount": 1, "InitialVariantWeight": 1, "InstanceType": "ml.t2.medium", "EndpointConfigName": "Prod" }'
+              RunOrder: 1
+            - 
+              Name: GetDeployStatus
+              ActionTypeId: 
+                Category: Invoke
+                Owner: AWS
+                Version: 1
+                Provider: Lambda
+              OutputArtifacts:
+                - Name: CompletedProdDeploy
+              InputArtifacts:
+                - Name: HostingInfoProd
+              Configuration:
+                FunctionName: 
+                  Fn::Join:
+                    - ""
+                    - - "MLOps-BYO-GetStatus-"
+                      - !Ref UniqueID
+                UserParameters: ' { "stage": "Deployment"} '
+              RunOrder: 2
+
+  CodePipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: codepipeline.amazonaws.com
+          Action: sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+
+
+  CodeBuildBYOImage:
+    Type: AWS::CodeBuild::Project
+    DependsOn: CodeBuildRole
+    Properties:
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/python:3.7.1-1.7.0
+        Type: LINUX_CONTAINER
+        PrivilegedMode: True
+        EnvironmentVariables: 
+          - Name: AWS_DEFAULT_REGION
+            Value: !Ref AWS::Region 
+          - Name: IMAGE_REPO_NAME
+            Value: !Ref ElasticContainerRegistry 
+          - Name: IMAGE_TAG
+            Value: "latest" 
+          - Name: AWS_ACCOUNT_ID
+            Value: !Ref AWS::AccountId
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: amazon-sagemaker-devops-with-ml/2-Bring-Your-Own/model-code/buildspec.yml
+      TimeoutInMinutes: 10
+      Name: !Sub ${AWS::StackName}CodeBuildBYOImage
+      ServiceRole: !Ref CodeBuildRole
+
+  TrainLambdaFunction:
+    Type: "AWS::Lambda::Function"
+    Properties: 
+      Handler: "MLOps-TrainModel.lambda_handler"
+      Role: !GetAtt [LambdaExecutionRole, Arn]
+      Environment: 
+        Variables:
+          SageMakerExecutionRole: !GetAtt [SageMakerRole, Arn]
+          SSEKMSKeyIdIn: !Ref S3KMSKey
+          ECRRepository: !Ref ElasticContainerRegistry
+          ModelArtifactBucket: !Ref ModelArtifactBucket
+          S3DataBucket: !Ref S3DataBucket
+      FunctionName: 
+        Fn::Join:
+         - ""
+         - - "MLOps-BYO-StartTrain-"
+           - !Ref UniqueID
+      Code:
+        S3Bucket: !Ref LambdaFunctionsBucket
+        S3Key: "MLOps-BYO-TrainModel.py.zip"
+      Runtime: "python3.6"
+
+  DeployLambdaFunction:
+    Type: "AWS::Lambda::Function"
+    Properties: 
+      Handler: "MLOps-DeployModel.lambda_handler"
+      Role: !GetAtt [LambdaExecutionRole, Arn]
+      Environment: 
+        Variables:
+          SageMakerExecutionRole: !GetAtt [SageMakerRole, Arn]
+          SSEKMSKeyIdIn: !Ref S3KMSKey
+      FunctionName: 
+        Fn::Join:
+         - ""
+         - - "MLOps-BYO-DeployModel-"
+           - !Ref UniqueID
+      Code:
+        S3Bucket: !Ref LambdaFunctionsBucket
+        S3Key: "MLOps-BYO-DeployModel.py.zip"
+      Runtime: "python3.6"
+
+  GetStatusLambdaFunction:
+    Type: "AWS::Lambda::Function"
+    Properties: 
+      Handler: "MLOps-GetStatus.lambda_handler"
+      Role: !GetAtt [LambdaExecutionRole, Arn]
+      Environment: 
+        Variables:
+          SageMakerExecutionRole: !GetAtt [SageMakerRole, Arn]
+          SSEKMSKeyIdIn: !Ref S3KMSKey
+      FunctionName: 
+        Fn::Join:
+         - ""
+         - - "MLOps-BYO-GetStatus-"
+           - !Ref UniqueID
+      Code:
+        S3Bucket: !Ref LambdaFunctionsBucket
+        S3Key: "MLOps-BYO-GetStatus.py.zip"
+      Runtime: "python3.6"
+
+  EvaluateModelLambdaFunction:
+    Type: "AWS::Lambda::Function"
+    Properties: 
+      Handler: "MLOps-EvaluateModel.lambda_handler"
+      Role: !GetAtt [LambdaExecutionRole, Arn]
+      Environment: 
+        Variables:
+          SageMakerExecutionRole: !GetAtt [SageMakerRole, Arn]
+          SSEKMSKeyIdIn: !Ref S3KMSKey
+          S3DataBucket: !Ref S3DataBucket
+      FunctionName: 
+        Fn::Join:
+         - ""
+         - - "MLOps-BYO-EvaluateModel-"
+           - !Ref UniqueID
+      Code:
+        S3Bucket: !Ref LambdaFunctionsBucket 
+        S3Key: "MLOps-BYO-EvaluateModel.py.zip"
+      Runtime: "python3.6"
+      Timeout: 600
+
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: codebuild.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+      RoleName: 
+        Fn::Join:
+          - ""
+          - - "MLOps-CodeBuild-ServiceRole-"
+            - !Ref UniqueID
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess
+        - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      RoleName: 
+       Fn::Join:
+          - ""
+          - - "MLOps-Lambda-ServiceRole-"
+            - !Ref UniqueID
+
+  SageMakerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: sagemaker.amazonaws.com 
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
+      RoleName: 
+       Fn::Join:
+          - ""
+          - - "MLOps-SageMaker-ServiceRole"
+            - !Ref UniqueID
+
+  S3KMSKey: 
+    Type: AWS::KMS::Key
+    Properties: 
+      Description: "S3Key"
+      Id: "S3MLOpsKey"
+      KeyPolicy: 
+        Version: "2012-10-17"
+        Id: "S3 Key"
+        Statement:
+          - Sid: "Enable IAM User Permissions"
+            Effect: "Allow"
+            Principal: 
+              AWS: !Join
+                - ""
+                - - "arn:aws:iam::"
+                  - !Ref AWS::AccountId
+                  - ":root"
+            Action: "kms:*"
+            Resource: "*"
+
+Outputs:
+      S3DataBucket:
+        Description: The ID of the S3 Bucket for model training and test data
+        Value: !Ref S3DataBucket
+      ElasticContainerRegistry:
+        Description: Elastic Container Registry for storing docker images containing training / inference code
+        Value: !Ref ElasticContainerRegistry
+      ModelArtifactBucket:
+        Description: S3 Bucket for storing model ArtifactStore
+        Value: !Ref ModelArtifactBucket
+      CodePipeline:
+        Description: Pipeline created inside the CodePipeline service-role
+        Value: !Ref CodePipeline
+

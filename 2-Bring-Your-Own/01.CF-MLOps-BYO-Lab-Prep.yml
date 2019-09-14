@@ -9,27 +9,6 @@ Parameters:
 
 Resources:
 
-  S3DataBucket:
-    Type: AWS::S3::Bucket
-    Properties: 
-      AccessControl: BucketOwnerFullControl
-      VersioningConfiguration: 
-        Status: Enabled
-      BucketName:
-        Fn::Join:
-          - ""
-          - - "mlops-data-"
-            - !Ref UniqueID
-            - "-"
-            - !Select
-             - 0
-             - !Split
-              - "-"
-              - !Select
-                - 2
-                - !Split
-                  - "/"
-                  - !Ref "AWS::StackId"
             
   S3LambdaFunctionCode:
     Type: AWS::S3::Bucket
@@ -62,20 +41,34 @@ Resources:
           - - "mlops-codecommit-byo-"
             - !Ref UniqueID
       RepositoryDescription: "MLOps BYO Code Commit Repository"
+
+  SageMakerNotebookLifecycleConfig:
+    Type: AWS::SageMaker::NotebookInstanceLifecycleConfig
+    Properties: 
+      NotebookInstanceLifecycleConfigName: "MLOps-BYO-Lifecycle-Config"
+      OnCreate:
+        - Content: 
+            Fn::Base64: !Sub |
+                #!/bin/bash
+                set -e
+                sudo -i -u ec2-user bash << EOF
+                echo "Setup the Workshop exercises"
+                git clone --bare https://github.com/aws-samples/amazon-sagemaker-devops-with-ml.git ~/SageMaker/mlops-codecommit-byo-*/amazon-sagemaker-devops-with-ml/
+    DependsOn: CodeCommitRepo
  
   SageMakerNotebookInstance:
     Type: AWS::SageMaker::NotebookInstance
     Properties: 
       DefaultCodeRepository: !GetAtt CodeCommitRepo.CloneUrlHttp
       InstanceType: ml.t3.medium
+      LifecycleConfigName: "MLOps-BYO-Lifecycle-Config"
       NotebookInstanceName: 
         Fn::Join:
             - ""
             - - "MLOps-BYO-Notebook-"
               - !Ref UniqueID
       RoleArn: !GetAtt [SageMakerNotebookInstanceRole, Arn]
-    DependsOn: CodeCommitRepo
-    
+      
   SageMakerNotebookInstanceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -103,8 +96,5 @@ Outputs:
       CodeCommitRepo:
         Description: The ID of the CodeCommit Repository
         Value: !Ref CodeCommitRepo 
-      S3DataBucket:
-        Description: The ID of the S3 Bucket containing model training and test data
-        Value: !Ref S3DataBucket
 
 
