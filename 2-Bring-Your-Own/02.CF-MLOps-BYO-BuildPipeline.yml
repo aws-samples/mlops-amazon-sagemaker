@@ -380,7 +380,7 @@ Resources:
             Value: !Ref AWS::AccountId
       Source:
         Type: CODEPIPELINE
-        BuildSpec: amazon-sagemaker-devops-with-ml/2-Bring-Your-Own/model-code/buildspec.yml
+        BuildSpec: model-code/buildspec.yml
       TimeoutInMinutes: 10
       Name: !Sub ${AWS::StackName}CodeBuildBYOImage
       ServiceRole: !Ref CodeBuildRole
@@ -388,12 +388,12 @@ Resources:
   TrainLambdaFunction:
     Type: "AWS::Lambda::Function"
     Properties: 
-      Handler: "MLOps-TrainModel.lambda_handler"
+      Handler: "MLOps-BYO-TrainModel.lambda_handler"
       Role: !GetAtt [LambdaExecutionRole, Arn]
       Environment: 
         Variables:
           SageMakerExecutionRole: !GetAtt [SageMakerRole, Arn]
-          SSEKMSKeyIdIn: !Ref S3KMSKey
+          SSEKMSKeyIdIn: !Ref KMSMasterKeyID
           ECRRepository: !Ref ElasticContainerRegistry
           ModelArtifactBucket: !Ref ModelArtifactBucket
           S3DataBucket: !Ref S3DataBucket
@@ -410,12 +410,12 @@ Resources:
   DeployLambdaFunction:
     Type: "AWS::Lambda::Function"
     Properties: 
-      Handler: "MLOps-DeployModel.lambda_handler"
+      Handler: "MLOps-BYO-DeployModel.lambda_handler"
       Role: !GetAtt [LambdaExecutionRole, Arn]
       Environment: 
         Variables:
           SageMakerExecutionRole: !GetAtt [SageMakerRole, Arn]
-          SSEKMSKeyIdIn: !Ref S3KMSKey
+          SSEKMSKeyIdIn: !Ref KMSMasterKeyID
       FunctionName: 
         Fn::Join:
          - ""
@@ -429,12 +429,12 @@ Resources:
   GetStatusLambdaFunction:
     Type: "AWS::Lambda::Function"
     Properties: 
-      Handler: "MLOps-GetStatus.lambda_handler"
+      Handler: "MLOps-BYO-GetStatus.lambda_handler"
       Role: !GetAtt [LambdaExecutionRole, Arn]
       Environment: 
         Variables:
           SageMakerExecutionRole: !GetAtt [SageMakerRole, Arn]
-          SSEKMSKeyIdIn: !Ref S3KMSKey
+          SSEKMSKeyIdIn: !Ref KMSMasterKeyID
       FunctionName: 
         Fn::Join:
          - ""
@@ -448,12 +448,12 @@ Resources:
   EvaluateModelLambdaFunction:
     Type: "AWS::Lambda::Function"
     Properties: 
-      Handler: "MLOps-EvaluateModel.lambda_handler"
+      Handler: "MLOps-BYO-EvaluateModel.lambda_handler"
       Role: !GetAtt [LambdaExecutionRole, Arn]
       Environment: 
         Variables:
           SageMakerExecutionRole: !GetAtt [SageMakerRole, Arn]
-          SSEKMSKeyIdIn: !Ref S3KMSKey
+          SSEKMSKeyIdIn: !Ref KMSMasterKeyID
           S3DataBucket: !Ref S3DataBucket
       FunctionName: 
         Fn::Join:
@@ -528,23 +528,23 @@ Resources:
           - - "MLOps-SageMaker-ServiceRole"
             - !Ref UniqueID
 
-  S3KMSKey: 
+  KMSMasterKeyID:
     Type: AWS::KMS::Key
     Properties: 
-      Description: "S3Key"
-      Id: "S3MLOpsKey"
+      Description: "An example CMK"
       KeyPolicy: 
         Version: "2012-10-17"
-        Id: "S3 Key"
+        Id: "key-default-1"
         Statement:
           - Sid: "Enable IAM User Permissions"
             Effect: "Allow"
             Principal: 
-              AWS: !Join
-                - ""
-                - - "arn:aws:iam::"
-                  - !Ref AWS::AccountId
-                  - ":root"
+              AWS: 
+                Fn::Join:
+                 - ""
+                 - - "arn:aws:iam::"
+                   - !Ref AWS::AccountId
+                   - ":root"
             Action: "kms:*"
             Resource: "*"
 
