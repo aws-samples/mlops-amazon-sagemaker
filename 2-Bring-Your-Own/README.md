@@ -37,11 +37,11 @@ For this lab, we will use a series of manual steps outlined in this document com
 
 In this step, you will launch a CloudFormation template using the file 01.CF-MLOps-BYO-Lab-Prep.yml provided as part of workshop materials.  This CloudFormation template accepts a single input parameter, **your-initials**,  that will be used to setup base components including:
 
--	**CodeCommit Repository:** CodeCommit repository that will act as our source code repository containing assets required for building our custom docker image 
+-	**CodeCommit Repository:** CodeCommit repository that will act as our source code repository containing assets required for building our custom docker image.
 
--	**S3 Bucket for Lambda Function Code:** S3 bucket that we will use to stage Lambda function code that will be deployed by a secondary CloudFormation template executed in a later step
+-	**S3 Bucket for Lambda Function Code:** S3 bucket that we will use to stage Lambda function code that will be deployed by a secondary CloudFormation template executed in a later step.
 
--  **SageMaker Notebook Instance:**  We will use a SageMaker Notebook Instance as a local development environment to ensure a consistent lab environment. 
+-  **SageMaker Notebook Instance:**  We will use a SageMaker Notebook Instance as a local development environment to ensure a consistent lab environment experience. 
 
 ### Steps:
 
@@ -69,7 +69,19 @@ In this step, you will launch a CloudFormation template using the file 01.CF-MLO
 
 ---
 
-## Step 2: Upload Lambda Functions to S3
+## Step 2: Create CodeCommit credentials (Maybe)
+
+In this step, you will need to upload pre-packaged Lambda functions to S3.  These Lambda functions will be used at various stages in our MLOps pipeline.
+
+1.	In the upper-right corner of the AWS Management Console, confirm you are in the desired AWS region (e.g., N.Virginia).  
+2.	Under Services, select IAM. In the left panel, select Users and select your user id from the list.  (Note: This is the IAM user id you are using to log in to the AWS Console)
+3.	Go to the Security credentials tab, and scroll to the bottom section titled HTTPS Git credentials for CodeCommit.
+4.	Click Generate , copy/paste your credentials so you can access them later and select Download credentials to also ensure you have a downloaded copy. 
+5.	Click Close
+
+---
+
+## Step 3: Upload Lambda Functions to S3
 
 In this step, you will need to upload pre-packaged Lambda functions to S3.  These Lambda functions will be used at various stages in our MLOps pipeline.  Because we will be using CloudFormation and [AWS Serverless Application Model (SAM)](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html) to deploy the Lambda functions into our accounts, they must be uploaded be packaged and uploaded to S3 prior to executing our next CloudFormation template.  
 
@@ -124,8 +136,6 @@ In this step, you will launch a CloudFormation template using the file 02.CF-MLO
 
 
 
-
-
 ### Steps:
 
 1. Login to the [AWS Console](https://https://console.aws.amazon.com/) and enter your credentials
@@ -133,3 +143,72 @@ In this step, you will launch a CloudFormation template using the file 02.CF-MLO
 2. To launch the setup of the resources above using CloudFormation, use the following link to launch the CloudFormation stack:
 
     [![Launch Stack](../images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?#/stacks/new?stackName=ImmersionLab1&templateURL=https://s3-us-east-1.amazonaws.com/amazon-sagemaker-devops-with-ml/master/02.CF-MLOps-BYO-BuildPipeline.yml)
+
+3. Under **Specify Stack Details**, enter: 
+
+   * **Stack Name**: MLOps-BYO-BuildPipeline
+
+   * **LambdaFunctionsBucket**: Enter the name of the existing S3 bucket that contains the lambda code we uploaded in the previous step 
+
+       (i.e. mlops-lambda-code-*yourinitials-uniqueid*) 
+
+   *  **RepositoryBranch**: master
+   *  **UniqueID**: Enter *yourinitials* in lower case (Example: jdd)
+
+4. Click **Next**
+
+5. Under **Configure stack options**, leave all defaults and click '**Next**'
+
+6. Under **Review**, scroll to the bottom and check the checkbox acknowledging that CloudFormation might create IAM resourcxes and custom names, then click **Create stack**
+
+7. You will be returned to the CloudFormation console and will see your stack status '**CREATE_IN_PROGRESS**'
+
+8. After a few minutes, you will see your stack Status change to '**CREATE_COMPLETE**'.  You're encouraged to go explore the resources created as part of this initial setup. 
+
+---
+
+## Step 4: Trigger Pipeline Executions
+
+In this step, you will execute several activities within a SageMaker Notebook Instance to:
+   
+   1. **Simulate Analytics Pipeline Activities**: Push S3 training and validation data to the S3 data bucket (i.e. mlops-data-*yourinitials-uniqueid*)
+
+   2. **Commit training/inference code to CodeCommit**: Using code from this public git repository (./model-code), commit code to the CodeCommit repository to trigger an execution of the CodePipeline.
+   
+### Steps:
+
+1. Login to the [AWS Console](https://https://console.aws.amazon.com/) and enter your credentials
+
+2. Select **Services** from the top menu, and choose **Amazon SageMaker** 
+
+3. Click on **Notebook Instances**
+
+4. You should see a notebook instance, created by the CloudFormation template, called **MLOps-BYO-Notebook-*yourinitials***.  Click **Open Jupyter**
+
+5. Under the **Files** tab, you will see a folder called **MLOps-codecommit-byo-*yourinitials***.   Within that folder is a notebook we will be using for the remainder of the workshop called **03.MLOps-BYO-LabNotebook.ipynb**.  
+
+6. Click on that notebook, and it will bring you into your Jupyter Notebook instance environment.  If you are not familiar with working inside notebook instance environments, the main items you will need to know for this workshop are below: 
+
+   * To execute the current code cell, you can click **Run** or Shift + Enter
+
+   * **EXECUTE THE CELLS IN ORDER, WAITING FOR THE PREVIOUS TO SUCCESSFULLY COMPLETE BEFORE EXECUTING THE NEXT**.   A cell has completed execution when there is a number in the bracked next to the cell as shown below.   If the cell is still executing, you will see [*]
+
+7. The remainder of the workshop will be conducted inside the Jupyter Notebook instance
+
+---
+
+## Step 5: Clean-Up 
+
+In addition to the steps for clean-up noted in your notebook instance, please execute the following clean-up steps: 
+
+1. Login to the [AWS Console](https://https://console.aws.amazon.com/) and enter your credentials
+
+2. Select **Services** from the top menu, and choose **Amazon SageMaker**
+
+   * Go to **Notebook Instances**, select your notebook instance by selecting the radio button next to it.
+
+   * Select **Actions** and then **Stop** from the dropdown list
+
+3. Select **Services** from the top menu, and choose **CloudFormation** 
+
+3. For the two stacks that were created in this workshop (MLOps-*), click the checkbox next to the stack.  Select **Actions** , then **Delete Stack**

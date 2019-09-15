@@ -9,7 +9,7 @@ phases:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...          
-      - cd amazon-sagemaker-devops-with-ml/2-Bring-Your-Own/model-code/  
+      - cd model-code/
       - echo Path `pwd` 
       - echo Permissions `ls -la` 
       - chmod -R 775 decision_trees 
