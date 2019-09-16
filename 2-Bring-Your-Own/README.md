@@ -8,6 +8,8 @@ In this lab, you will create a deployment pipeline utilizing AWS Development Ser
 
 In this lab, the use case we will focus on will be bring-your-own-algorithm for training and deploying on SageMaker.  We will combine this use case with implementing a base reference MLOps pipeline.
 
+-----
+
 ## Workshop Contents
 
 For this portion of the workshop, we will be building the following pipeline:  
@@ -16,6 +18,12 @@ For this portion of the workshop, we will be building the following pipeline:
 
 
 
+-------
+## Prerequisite
+
+1) AWS Account & Administrator Access
+
+------
 
 ## Lab Overview
 

@@ -1,0 +1,105 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: MLOps-Workshop-BIA-LabSetup
+Parameters: 
+  UniqueID: 
+    Type: String
+    Default: yourinitials
+    Description: Enter your initials in lower case as a unique identifier for components created 
+    AllowedPattern: "^([a-z]|(d(?!d{0,2}.d{1,3}.d{1,3}.d{1,3})))([a-zd]|(.(?!(.|-)))|(-(?!.))){1,61}[a-zd.]$"
+
+Resources:
+
+            
+  S3LambdaFunctionCode:
+    Type: AWS::S3::Bucket
+    Properties: 
+      AccessControl: BucketOwnerFullControl
+      VersioningConfiguration: 
+        Status: Enabled
+      BucketName:
+        Fn::Join:
+          - ""
+          - - "mlops-bia-lambda-code-"
+            - !Ref UniqueID
+            - "-"
+            - !Select
+             - 0
+             - !Split
+              - "-"
+              - !Select
+                - 2
+                - !Split
+                  - "/"
+                  - !Ref "AWS::StackId"
+
+  CodeCommitRepo:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: "mlops-codecommit-BIA"
+      RepositoryDescription: "MLOps BIA Code Commit Repository"
+
+  SageMakerNotebookLifecycleConfig:
+    Type: AWS::SageMaker::NotebookInstanceLifecycleConfig
+    Properties: 
+      NotebookInstanceLifecycleConfigName: "MLOps-BIA-Lifecycle-Config"
+      OnCreate:
+        - Content: 
+            Fn::Base64: !Sub |
+                #!/bin/bash
+                set -e
+                sudo -i -u ec2-user bash << EOF
+                echo "Setup the Workshop exercises"
+                git clone --bare https://github.com/aws-samples/amazon-sagemaker-devops-with-ml.git /home/ec2-user/SageMaker/lab-package-tmp2
+                cp -R /home/ec2-user/SageMaker/lab-package-tmp2/amazon-sagemaker-devops-with-ml/1-Built-In-Algorithm/* /home/ec2-user/SageMaker/mlops-codecommit-BIA/
+    DependsOn: CodeCommitRepo
+ 
+  SageMakerNotebookInstance:
+    Type: AWS::SageMaker::NotebookInstance
+    Properties: 
+      DefaultCodeRepository: !GetAtt CodeCommitRepo.CloneUrlHttp
+      InstanceType: ml.t3.medium
+      LifecycleConfigName: "MLOps-BIA-Lifecycle-Config"
+      NotebookInstanceName: 
+        Fn::Join:
+            - ""
+            - - "MLOps-BIA-Notebook-"
+              - !Ref UniqueID
+      RoleArn: !GetAtt [SageMakerNotebookInstanceRole, Arn]
+      
+  SageMakerNotebookInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: sagemaker.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
+          - arn:aws:iam::aws:policy/AmazonS3FullAccess
+          - arn:aws:iam::aws:policy/AWSCodeCommitFullAccess     
+      RoleName: 
+        Fn::Join:
+           - ""
+           - - "MLOps-SageMakerNotebookInstance-ServiceRole-"
+             - !Ref UniqueID
+             - "-"
+             - !Select
+              - 0
+              - !Split
+               - "-"
+               - !Select
+                 - 2
+                 - !Split
+                   - "/"
+                   - !Ref "AWS::StackId"
+
+Outputs:
+      SageMakerNotebookInstance:
+        Description: The ID of the SageMaker Notebook Instance
+        Value: !Ref SageMakerNotebookInstance
+      CodeCommitRepo:
+        Description: The ID of the CodeCommit Repository
+        Value: !Ref CodeCommitRepo 
