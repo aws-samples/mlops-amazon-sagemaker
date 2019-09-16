@@ -59,7 +59,7 @@ In this step, you will launch a CloudFormation template using the file 01.CF-MLO
 
    *  **UniqueID**: Enter *yourinitials* in lower case (Example: jdd)
 
-   ![WorkshopSetup](../images/cf-setup.png)
+   ![WorkshopSetup](./images/cf-setup.png)
 
 4. Click **Next**
 
