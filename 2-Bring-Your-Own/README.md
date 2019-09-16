@@ -59,8 +59,6 @@ In this step, you will launch a CloudFormation template using the file 01.CF-MLO
 
    *  **UniqueID**: Enter *yourinitials* in lower case (Example: jdd)
 
-   ![WorkshopSetup](./images/cf-setup.png)
-
 4. Click **Next**
 
 5. Under **Configure stack options**, leave all defaults and click '**Next**'
@@ -71,17 +69,6 @@ In this step, you will launch a CloudFormation template using the file 01.CF-MLO
 
 8. After a few minutes, you will see your stack Status change to '**CREATE_COMPLETE**'.  You're encouraged to go explore the resources created as part of this initial setup. 
 
----
-
-## Step 2: Create CodeCommit credentials (Maybe)
-
-In this step, you will need to upload pre-packaged Lambda functions to S3.  These Lambda functions will be used at various stages in our MLOps pipeline.
-
-1.	In the upper-right corner of the AWS Management Console, confirm you are in the desired AWS region (e.g., N.Virginia).  
-2.	Under Services, select IAM. In the left panel, select Users and select your user id from the list.  (Note: This is the IAM user id you are using to log in to the AWS Console)
-3.	Go to the Security credentials tab, and scroll to the bottom section titled HTTPS Git credentials for CodeCommit.
-4.	Click Generate , copy/paste your credentials so you can access them later and select Download credentials to also ensure you have a downloaded copy. 
-5.	Click Close
 
 ---
 
@@ -119,7 +106,7 @@ You should now see all of your packaged lambda functions stored as object inside
 
 ---
 
-## Step 3: Build the Base MLOps Pipeline
+## Step 4: Build the Base MLOps Pipeline
 
 In this step, you will launch a CloudFormation template using the file 02.CF-MLOps-BYO-BuildPipeline.yml provided as part of workshop materials to build out the pipeline we will be using to train and deploy our models.  This CloudFormation template accepts 4 input parameters that will be used to setup base components including:
 
@@ -173,7 +160,7 @@ In this step, you will launch a CloudFormation template using the file 02.CF-MLO
 
 ---
 
-## Step 4: Trigger Pipeline Executions
+## Step 5: Trigger Pipeline Executions
 
 In this step, you will execute several activities within a SageMaker Notebook Instance to:
    
@@ -202,7 +189,7 @@ In this step, you will execute several activities within a SageMaker Notebook In
 
 ---
 
-## Step 5: Clean-Up 
+## Step 6: Clean-Up 
 
 In addition to the steps for clean-up noted in your notebook instance, please execute the following clean-up steps: 
 
