@@ -25,11 +25,13 @@ Using the same code (with some minor modifications), we will package the code in
 
 This lab will walk you through the steps required to:
 
-•	Setup a base pipeline responsible for orchestration of workflow to build and deploy custom ML models to target environments
+• Setup a base pipeline responsible for orchestration of workflow to build and deploy custom ML models to target environments
+
 •	Create logic, in this case Lambda functions, to execute the necessary steps within the orchestrated pipeline required to build, train, and host ML models in an end-to-end pipeline
+
 For this lab, we will use a series of manual steps outlined in this document combined with two CloudFormation templates.  CloudFormation is an AWS service that allows you to model your entire infrastructure using YAML/JSON templates.   The use of CloudFormation is included not only for  simplicity in lab setup but also to demonstrate the capabilities and benefits of Infrastructure-as-Code(IAC) and Configuration-as-Code(CAC).  
 
-**Note:** There are steps in the lab that assume you are using N.Virginia (us-east-1).  Please use us-east-1 or be aware there are regional references you will need to update. 
+## **There are steps in the lab that assume you are using N.Virginia (us-east-1).  Please use us-east-1 for this workshop** 
 
 ---
 
@@ -57,11 +59,13 @@ In this step, you will launch a CloudFormation template using the file 01.CF-MLO
 
    *  **UniqueID**: Enter *yourinitials* in lower case (Example: jdd)
 
+   ![WorkshopSetup](../images/cf-setup.png)
+
 4. Click **Next**
 
 5. Under **Configure stack options**, leave all defaults and click '**Next**'
 
-6. Under **Review**, scroll to the bottom and check the checkbox acknowledging that CloudFormation might create IAM resourcxes and custom names, then click **Create stack**
+6. Under **Review**, scroll to the bottom and check the checkbox acknowledging that CloudFormation might create IAM resources and custom names, then click **Create**
 
 7. You will be returned to the CloudFormation console and will see your stack status '**CREATE_IN_PROGRESS**'
 
@@ -83,7 +87,14 @@ In this step, you will need to upload pre-packaged Lambda functions to S3.  Thes
 
 ## Step 3: Upload Lambda Functions to S3
 
-In this step, you will need to upload pre-packaged Lambda functions to S3.  These Lambda functions will be used at various stages in our MLOps pipeline.  Because we will be using CloudFormation and [AWS Serverless Application Model (SAM)](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html) to deploy the Lambda functions into our accounts, they must be uploaded be packaged and uploaded to S3 prior to executing our next CloudFormation template.  
+In this step, you will need to upload pre-packaged Lambda functions to S3.  These Lambda functions will be used at various stages in our MLOps pipeline.  Because we will be using CloudFormation and the [AWS Serverless Application Model (SAM)](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html) to deploy the Lambda functions into our accounts, they must be uploaded be packaged and uploaded to S3 prior to executing our next CloudFormation template.  
+
+The descriptions of each Lambda function are included below:
+
+-	**MLOps-BYO-TrainModel.py.zip:**  This Lambda function is responsible for executing a function that will accept various user parameters from code pipeline (ex. ECR Repository, ECR Image Version, S3 Cleansed Training Data Bucket) and use that information to then setup a training job and train a custom model using SageMaker
+-	**MLOps-BYO-GetStatus.py.zip:** This Lambda function is responsible for checking back in on the status of the previous Lambda function.  Because Lambda has an execution time limit, this function ensures that the status of the previous function is accurately capture before moving on to the next stage in the pipeline
+-	**MLOps-BYO-DeployModel.py.zip:** This Lambda function is responsible for executing a function that will accept various user parameters from code pipeline (ex. target deployment environment) and use that information to then setup a Configuration Endpoint and Endpoint for hosting the trained model using SageMaker
+-	**MLOps-BYO-EvaluateModel.py.zip:** This Lambda function is responsible for running predictions against the trained model by accepting an environment identifier as well as an S3 bucket with sample payload as input from code pipeline.  
 
 ### Steps:
 
@@ -91,24 +102,19 @@ In this step, you will need to upload pre-packaged Lambda functions to S3.  Thes
 
 2. From the AWS console, go to **Services** and select **S3**
 
-3. Find and click on your bucket created in the previous step (mlops-lambda-code-your-initials-randomgeneratedID)
+3. Find and click on your bucket created in the previous step (mlops-lambda-code-*yourinitials-randomgeneratedID*)
 
      Example: mlops-lambda-code-jdd-9d055090
 
 4. Click **Upload** in the upper left corner to uploaded pre-packaged lambda functions to your bucket
 
-    * Click **Add files** and select all 4 lambda functions from the 2-Bring-Your-Own/lambda-code directory in this repository that were download/cloned to your local laptop in step #1
+    * Click **Add files** and select all 4 lambda functions from the 2-Bring-Your-Own/lambda-code/MLOps-BYO*.zip directory in this repository that were download/cloned to your local laptop in step #1
 
     * Click **Next**
 
     * Accept defaults on remaining prompts selecting **Next** each time until hitting **Upload** on the final screen
 
-You should now see all of your packaged lambda functions stored as object inside your S3 buckets. The CloudFormation template we launch next will pull the objects from this bucket and deploy them to as functions in the [AWS Lambda Service](https://aws.amazon.com/lambda/).   The descriptions of each Lambda function are included below:
-
--	**MLOps-BYO-TrainModel.py.zip:**  This Lambda function is responsible for executing a function that will accept various user parameters from code pipeline (ex. ECR Repository, ECR Image Version, S3 Cleansed Training Data Bucket) and use that information to then setup a training job and train a custom model using SageMaker
--	**MLOps-BYO-GetStatus.py.zip:** This Lambda function is responsible for checking back in on the status of the previous Lambda function.  Because Lambda has an execution time limit, this function ensures that the status of the previous function is accurately capture before moving on to the next stage in the pipeline
--	**MLOps-BYO-DeployModel.py.zip:** This Lambda function is responsible for executing a function that will accept various user parameters from code pipeline (ex. target deployment environment) and use that information to then setup a Configuration Endpoint and Endpoint for hosting the trained model using SageMaker
--	**MLOps-BYO-EvaluateModel.py.zip:** This Lambda function is responsible for running predictions against the trained model by accepting an environment identifier as well as an S3 bucket with sample payload as input from code pipeline.  
+You should now see all of your packaged lambda functions stored as object inside your S3 buckets. The CloudFormation template we launch next will pull the objects from this bucket and deploy them to as functions in the [AWS Lambda Service](https://aws.amazon.com/lambda/).   
 
 
 ---
@@ -159,7 +165,7 @@ In this step, you will launch a CloudFormation template using the file 02.CF-MLO
 
 5. Under **Configure stack options**, leave all defaults and click '**Next**'
 
-6. Under **Review**, scroll to the bottom and check the checkbox acknowledging that CloudFormation might create IAM resourcxes and custom names, then click **Create stack**
+6. Under **Review**, scroll to the bottom and check the checkbox acknowledging that CloudFormation might create IAM resources and custom names, then click **Create**
 
 7. You will be returned to the CloudFormation console and will see your stack status '**CREATE_IN_PROGRESS**'
 
@@ -185,15 +191,14 @@ In this step, you will execute several activities within a SageMaker Notebook In
 
 4. You should see a notebook instance, created by the CloudFormation template, called **MLOps-BYO-Notebook-*yourinitials***.  Click **Open Jupyter**
 
-5. Under the **Files** tab, you will see a folder called **MLOps-codecommit-byo-*yourinitials***.   Within that folder is a notebook we will be using for the remainder of the workshop called **03.MLOps-BYO-LabNotebook.ipynb**.  
+5. Under the **Files** tab, you will see a folder called **MLOps-codecommit-byo**.   Within that folder is a notebook we will be using for the remainder of the workshop called **03.MLOps-BYO-LabNotebook.ipynb**.  
 
-6. Click on that notebook, and it will bring you into your Jupyter Notebook instance environment.  If you are not familiar with working inside notebook instance environments, the main items you will need to know for this workshop are below: 
+6. Click on that notebook, and it will bring you into your Jupyter Notebook instance environment.  The remainder of the workshop will be conducted inside the Jupyter Notebook instance.  If you are not familiar with working inside notebook instance environments, the main items you will need to know for this workshop are below: 
 
-   * To execute the current code cell, you can click **Run** or Shift + Enter
+   * To execute the current code cell, you can click **Run** on the top menu or Shift + Enter
 
    * **EXECUTE THE CELLS IN ORDER, WAITING FOR THE PREVIOUS TO SUCCESSFULLY COMPLETE BEFORE EXECUTING THE NEXT**.   A cell has completed execution when there is a number in the bracked next to the cell as shown below.   If the cell is still executing, you will see [*]
 
-7. The remainder of the workshop will be conducted inside the Jupyter Notebook instance
 
 ---
 

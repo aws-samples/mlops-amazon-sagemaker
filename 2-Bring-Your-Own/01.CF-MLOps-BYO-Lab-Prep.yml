@@ -35,11 +35,7 @@ Resources:
   CodeCommitRepo:
     Type: AWS::CodeCommit::Repository
     Properties:
-      RepositoryName: 
-        Fn::Join:
-          - ""
-          - - "mlops-codecommit-byo-"
-            - !Ref UniqueID
+      RepositoryName: "mlops-codecommit-byo"
       RepositoryDescription: "MLOps BYO Code Commit Repository"
 
   SageMakerNotebookLifecycleConfig:
@@ -54,7 +50,7 @@ Resources:
                 sudo -i -u ec2-user bash << EOF
                 echo "Setup the Workshop exercises"
                 git clone --bare https://github.com/aws-samples/amazon-sagemaker-devops-with-ml.git /home/ec2-user/SageMaker/lab-package-tmp
-                cp -R /home/ec2-user/SageMaker/lab-package-tmp/2-Bring-Your-Own/* /home/ec2-user/SageMaker/mlops*/
+                cp -R /home/ec2-user/SageMaker/lab-package-tmp/amazon-sagemaker-devops-with-ml/2-Bring-Your-Own/* /home/ec2-user/SageMaker/mlops-codecommit-byo/
     DependsOn: CodeCommitRepo
  
   SageMakerNotebookInstance:

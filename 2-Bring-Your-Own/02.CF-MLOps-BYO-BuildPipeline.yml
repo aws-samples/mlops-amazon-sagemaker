@@ -117,11 +117,7 @@ Resources:
               Configuration: 
                 BranchName: 
                   Ref: RepositoryBranch
-                RepositoryName:
-                  Fn::Join:
-                    - ""
-                    - - "mlops-codecommit-byo-"
-                      - !Ref UniqueID
+                RepositoryName: "mlops-codecommit-byo"
               RunOrder: 1
         - 
           Name: Build
