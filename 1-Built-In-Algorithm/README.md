@@ -146,55 +146,10 @@ To launch the setup of the above resources using CloudFormation, use the followi
 
 6. After a few minutes, you will see your stack Status change to **'CREATE_COMPLETE'**. You're encouraged to go explore the resources created as part of this initial setup.
 
---------
-## Test the Pipeline
-
-In this section, we will now try to execute the pipeline that was setup in the preceding steps.   
-
-**Steps:**
-
-1. In the upper-right corner of the AWS Management Console, confirm you are in the desired AWS region (e.g., N.Virginia).  Under Services, select **CodePipeline**
-
-2.	From the left menu, select **Pipelines**
-
-3. You should see a pipeline with your initials, click on that pipeline:
-
-4. You will see the pipeline that was created utilizing CloudFormation.  If your pipeline is not already running, we will want to invoke a manual execution of the pipeline to test the Stages and actions setup.  Click **Release Change** in the upper right hand corner:
-
-5. A popup window will come up confirming you would like to continue, click **Release**
 
 ---
 
-## Step 5: Trigger Pipeline Executions
-
-In this step, you will execute several activities within a SageMaker Notebook Instance to:
-
-   1. **Simulate Analytics Pipeline Activities**: Push S3 training and validation data to the S3 data bucket (i.e. mlops-data-*yourinitials-uniqueid*)
-
-   2. **Update Hyperparameters**: Push hyperparameter changes to CodePipeline via User Parameters.
-
-### Steps:
-
-1. Login to the [AWS Console](https://https://console.aws.amazon.com/) and enter your credentials
-
-2. Select **Services** from the top menu, and choose **Amazon SageMaker**
-
-3. Click on **Notebook Instances**
-
-4. You should see a notebook instance, created by the CloudFormation template, called **MLOps-BIA-Notebook-*yourinitials***.  Click **Open Jupyter**
-
-5. Under the **Files** tab, you will see a folder called **MLOps-codecommit-bia**.   Within that folder is a notebook we will be using for the remainder of the workshop called **03.MLOps-BIA-LabNotebook.ipynb**.
-
-6. Click on that notebook, and it will bring you into your Jupyter Notebook instance environment.  The remainder of the workshop will be conducted inside the Jupyter Notebook instance.  If you are not familiar with working inside notebook instance environments, the main items you will need to know for this workshop are below:
-
-   * To execute the current code cell, you can click **Run** on the top menu or Shift + Enter
-
-   * **EXECUTE THE CELLS IN ORDER, WAITING FOR THE PREVIOUS TO SUCCESSFULLY COMPLETE BEFORE EXECUTING THE NEXT**.   A cell has completed execution when there is a number in the bracked next to the cell as shown below.   If the cell is still executing, you will see [*]
-
-
----
-
-## Step 6: Clean-Up
+## Step 4: Clean-Up
 
 In addition to the steps for clean-up noted in your notebook instance, please execute the following clean-up steps:
 1. Login to the [AWS Console](https://https://console.aws.amazon.com/) and enter your credentials
