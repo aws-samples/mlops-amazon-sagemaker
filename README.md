@@ -1,6 +1,6 @@
 # Amazon SageMaker MLOps
 
-The workshops contained in this repository are focused on demonstrating capabilities around MLOps - applying core DevOps practices to Machine Learning workloads using [AWS Developer Tools](https://aws.amazon.com/products/developer-tools/) combined with [Amazon SageMaker](https://aws.amazon.com/sagemaker/).  ![SageMakerIcon](../images/SageMaker-Icon.png)
+The workshops contained in this repository are focused on demonstrating capabilities around MLOps - applying core DevOps practices to Machine Learning workloads using [AWS Developer Tools](https://aws.amazon.com/products/developer-tools/) combined with [Amazon SageMaker](https://aws.amazon.com/sagemaker/).  ![SageMakerIcon](./images/SageMaker-Icon.png)
 
 ## Background 
 Applying DevOps practices to Machine Learning (ML) workloads is a fundamental practice to ensure models are deployed using a reliable and consistent process as well as establishing a strategy for retraining your models.
