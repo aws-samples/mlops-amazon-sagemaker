@@ -147,7 +147,7 @@ To launch the setup of the above resources using CloudFormation, use the followi
 6. After a few minutes, you will see your stack Status change to **'CREATE_COMPLETE'**. You're encouraged to go explore the resources created as part of this initial setup.
 
 --------
-## Test the Pipeline
+## Step 4: Test the Pipeline
 
 In this section, we will now try to execute the pipeline that was setup in the preceding steps.   
 
