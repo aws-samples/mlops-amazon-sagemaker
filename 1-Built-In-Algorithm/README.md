@@ -72,7 +72,7 @@ In this step, you will need to upload pre-packaged Lambda functions to S3. These
 
 3. In the upper left hand corner, click **Upload**
 
-4. Click ‘Add Files’, upload the following files that were provided as part of the class lab materials in the [**PipelineLambdaFunctions**](/PipelineLambdaFunctions) folder:
+4. Click ‘Add Files’, upload the following files that were provided as part of the class lab materials in the [**PipelineLambdaFunctions**](/lambda-code) folder:
 
  - **MLOps-BIA-TrainModel.py.zip:**  This Lambda function is responsible for executing a function that will accept various user parameters from code pipeline (ex. type of compute, volume size, number of training instances, algorithm name) and use that information to then setup a training job and train a model using SageMaker
 
