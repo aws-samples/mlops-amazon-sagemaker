@@ -345,7 +345,7 @@ Resources:
           SSEKMSKeyIdIn: !Ref KMSMasterKeyID
           ModelArtifactBucket: !Ref ModelArtifactBucket
           S3DataBucket: !Ref S3DataBucket
-          AlgoECR: "683313688378.dkr.ecr.us-east-1.amazonaws.com/xgboost:1"
+          AlgoECR: "683313688378.dkr.ecr.us-east-1.amazonaws.com"
       FunctionName: 
         Fn::Join:
          - ""
