@@ -25,7 +25,7 @@ Resources:
         Status: Enabled
       BucketName:
         Fn::Join:
-         - ""
+          - ""
           - - "mlops-bia-codepipeline-artifacts-"
             - !Ref UniqueID
             - "-"
