@@ -38,7 +38,7 @@ def lambda_handler(event, context):
         create_training_job(user_param, job_name)
         
         write_job_info_s3(event)
-        put_job_success(event, train_start_calc)
+        put_job_success(event)
 
     except Exception as e:
         print(e)
@@ -64,11 +64,13 @@ def create_training_job(user_param, job_name):
  
         # Role to pass to SageMaker training job that has access to training data in S3, etc
         SageMakerRole = os.environ['SageMakerExecutionRole']
-
-        container = get_image_uri(region, 'xgboost')
-
         
-        builtin_algo = os.environ['BuiltInAlgo']
+        #Get ECR information for BIA
+        algo_version = user_param['Algorithm']
+        ecr_path = os.environ['AlgoECR']
+        container_path = ecr_path + '/' + algo_version
+        print('[INFO]Container Path', container_path)
+        
         train_instance_type = user_param['traincompute']
         train_volume_size = user_param['traininstancevolumesize']
         train_instance_count = user_param['traininstancecount']
@@ -85,9 +87,7 @@ def create_training_job(user_param, job_name):
         print('[INFO]TRAIN_INSTANCE_TYPE:', train_instance_type)
         print('[INFO]TRAIN_VOLUME_SIZE:', train_volume_size)
         print('[INFO]TRAIN_INSTANCE_COUNT:', train_instance_count)
-
-        container_path = get_image_uri(region, builtin_algo)
-        
+   
 
         create_training_params = \
         {
@@ -109,7 +109,7 @@ def create_training_job(user_param, job_name):
                 "max_depth": maxdepth_in,
                 "eta": eta_in,
                 "gamma": gamma_in,
-                "min_child_weight": min_child_weight_in
+                "min_child_weight": min_child_weight_in,
                 "objective": objective_in,
                 "num_round": num_round_in
             },
@@ -118,7 +118,7 @@ def create_training_job(user_param, job_name):
             },
             "InputDataConfig": [
                 {
-                    "ChannelName": "training",
+                    "ChannelName": "train",
                     "DataSource": {
                         "S3DataSource": {
                             "S3DataType": "S3Prefix",
@@ -171,13 +171,9 @@ def write_job_info_s3(event):
     
     print('[SUCCESS]Job Information Written to S3')
 
-def put_job_success(event, train_start_calc):
+def put_job_success(event):
     
-    train_end = strftime("%Y-%m-%d-%H-%M-%S", gmtime())
-    train_end_calc = datetime.datetime.now()
-    print('[INFO]TRAIN_END_SUCCESS:', train_end)
-    total_train_time = train_end_calc - train_start_calc
-    print('[INFO]TOTAL_TRAIN_TIME:', total_train_time)
+    print('[SUCCESS]Training Job started - kicking off next stage in pipeline...')
     print(event['message'])
     code_pipeline.put_job_success_result(jobId=event['CodePipeline.job']['id'])
 

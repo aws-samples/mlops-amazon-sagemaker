@@ -30,6 +30,8 @@ def lambda_handler(event, context):
         
         endpoint_environment = config_param["EndpointConfigName"]
         print("[INFO]Endpoint environment:", endpoint_environment)
+        initial_variant_weight = config_param['InitialVariantWeight']
+        print('[INFO]INITIAL_VARIANT_WEIGHT:', initial_variant_weight)
         
         # endpoint_environment can be changed based on specific environment setup
         # valid values are 'Dev','Test','Prod'
@@ -45,7 +47,15 @@ def lambda_handler(event, context):
 
         event['message'] = 'Creating Endpoint Hosting"{} started."'.format(endpoint_config_name)
          
-        create_endpoint_config(jobName,endpoint_config_name,config_param)
+        create_endpoint_config(jobName,endpoint_config_name,config_param,initial_variant_weight)
+
+        #TO DO 
+        #if initial_variant_weight == 1:
+            # CleanUp old endpoint to avoid additional charges
+        #    clean_up_oldendpoints(endpoint_environment)
+        #else:
+        #    print("[INFO] Initial variant is not 1")
+ 
     
         create_endpoint(endpoint_config_name)
 
@@ -92,7 +102,7 @@ def create_model(jobName, trainingImage, modelArtifact):
         print("ERROR:", "create_model", response)
         raise(e)
     
-def create_endpoint_config(jobName,endpoint_config_name,config_param):
+def create_endpoint_config(jobName,endpoint_config_name,config_param, initial_variant_weight):
     """ Create SageMaker endpoint configuration. 
     Args:
         jobName (string): Name to label endpoint configuration with. For easy identification of model deployed behind endpoint the endpoint name will match the trainingjob
@@ -104,11 +114,9 @@ def create_endpoint_config(jobName,endpoint_config_name,config_param):
     try:
         
         deploy_instance_type = config_param['InstanceType']
-        initial_variant_weight = config_param['InitialVariantWeight']
         initial_instance_count = config_param['InitialInstanceCount']
         print('[INFO]DEPLOY_INSTANCE_TYPE:', deploy_instance_type)
-        print('[INFO]INITIAL_VARIANT_WEIGHT:', initial_variant_weight)
-        print('[INFO]INITIAL_INSTANCE_COUNT:', initial_instance_count)
+        print('[INFO]INITIAL_INSTANCE_COUNT:', initial_instance_count)         
 
         response = sagemaker.create_endpoint_config(
             EndpointConfigName=endpoint_config_name,
@@ -128,25 +136,6 @@ def create_endpoint_config(jobName,endpoint_config_name,config_param):
         print(e)
         print("[ERROR]create_endpoint_config:", response)
         raise(e)
-
-def check_endpoint_exists(endpoint_name):
-    """ Check if SageMaker endpoint for model already exists.
-    Args:
-        endpoint_name (string): Name of endpoint to check if exists.
-    Returns:
-        (boolean)
-        True if endpoint already exists.
-        False otherwise.
-    """
-    try:
-        response = sagemaker.describe_endpoint(
-            EndpointName=endpoint_name
-        )
-        print("[SUCCESS]check_endpoint_exists:", response)
-        return True
-    except Exception as e:
-        print("[ERROR]check_endpoint_exists:", response)
-        return False
 
     
 def create_endpoint(endpoint_config_name):
@@ -257,6 +246,4 @@ def put_job_success(event):
 def put_job_failure(event):  
     print('[ERROR]Putting job failure')
     print(event['message'])
-    #code_pipeline.put_job_failure_result(jobId=event['CodePipeline.job']['id'], failureDetails={'message': event['message'], 'type': 'JobFailed'})
-    #temporary very ugly fix - stuck in loop and need to adding logic checking existing - it is creating model, endpoint config and endpoint successfully
     code_pipeline.put_job_success_result(jobId=event['CodePipeline.job']['id'])

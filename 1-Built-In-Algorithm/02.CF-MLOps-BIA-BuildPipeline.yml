@@ -25,7 +25,7 @@ Resources:
         Status: Enabled
       BucketName:
         Fn::Join:
-          - ""
+         - ""
           - - "mlops-bia-codepipeline-artifacts-"
             - !Ref UniqueID
             - "-"
@@ -132,7 +132,7 @@ Resources:
                     - ""
                     - - "MLOps-BIA-TrainModel-"
                       - !Ref UniqueID
-                UserParameters: ' {"traincompute": "ml.c4.2xlarge" , "traininstancevolumesize": 10, "traininstancecount": 1, "BuiltInAlgo": "xgboost", "MaxDepth": 5, "eta": 0.2, "MinChildWeight": 6, "SubSample": 0.8, "Silent": 0, "Objective": "binary:logistic", "NumRound": 100} '
+                UserParameters: ' {"Algorithm": "xgboost:1", "traincompute": "ml.c4.2xlarge" , "traininstancevolumesize": 10, "traininstancecount": 1, "MaxDepth": "5", "eta": "0.2", "gamma": "4", "MinChildWeight": "6", "SubSample": 0.8, "Silent": 0, "Objective": "binary:logistic", "NumRound": "100"} '
               RunOrder: 1
             - 
               Name: GetTrainingStatus
@@ -171,7 +171,7 @@ Resources:
                 FunctionName: 
                   Fn::Join:
                     - ""
-                    - - "MLOps-bia-DeployModel-"
+                    - - "MLOps-BIA-DeployModel-"
                       - !Ref UniqueID
                 UserParameters: '{ "InitialInstanceCount": 1, "InitialVariantWeight": 1, "InstanceType": "ml.t2.medium", "EndpointConfigName": "Dev" }'
               RunOrder: 1
@@ -190,7 +190,7 @@ Resources:
                 FunctionName: 
                   Fn::Join:
                     - ""
-                    - - "MLOps-bia-GetStatus-"
+                    - - "MLOps-BIA-GetStatus-"
                       - !Ref UniqueID
                 UserParameters: ' { "stage": "Deployment"} '
               RunOrder: 2
@@ -209,7 +209,7 @@ Resources:
                 FunctionName:   
                   Fn::Join:
                     - ""
-                    - - "MLOps-bia-EvaluateModel-"
+                    - - "MLOps-BIA-EvaluateModel-"
                       - !Ref UniqueID
                 UserParameters: ' { "env": "Dev" } '
               RunOrder: 3
@@ -293,7 +293,7 @@ Resources:
                     - ""
                     - - "MLOps-BIA-DeployModel-"
                       - !Ref UniqueID
-                UserParameters: '{ "InitialInstanceCount": 1, "InitialVariantWeight": 1, "InstanceType": "ml.t2.medium", "EndpointConfigName": "Prod" }'
+                UserParameters: '{ InitialInstanceCount": 1, "InitialVariantWeight": 1, "InstanceType": "ml.t2.medium", "EndpointConfigName": "Prod" }'
               RunOrder: 1
             - 
               Name: GetDeployStatus
@@ -345,6 +345,7 @@ Resources:
           SSEKMSKeyIdIn: !Ref KMSMasterKeyID
           ModelArtifactBucket: !Ref ModelArtifactBucket
           S3DataBucket: !Ref S3DataBucket
+          AlgoECR: "811284229777.dkr.ecr.us-east-1.amazonaws.com/xgboost:1"
       FunctionName: 
         Fn::Join:
          - ""
