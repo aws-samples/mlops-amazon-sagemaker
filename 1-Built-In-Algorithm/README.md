@@ -31,7 +31,7 @@ First, we will execute a Cloud Formation template to do some initial setup of ou
      - **Training Config:** configuration code used for training the model (ex. hyperparameters)
     - **Pipeline Lambda Code:** code that we will use for training and deploying our model using Amazon SageMaker
     - **Inference Lambda Code:** code that we will use for evaluation of the model by running predictions against our hosted model 
-    *Note: These repositories would alternatively be created in GitHub as an alternative to AWS CodeCommit* 
+    *Note: These repositories could be created in GitHub as an alternative to AWS CodeCommit* 
 
 2) **S3 Bucket for [Lambda Functions:](https://aws.amazon.com/lambda/)** that will store:
 
@@ -61,7 +61,7 @@ To launch the setup of the resources above using CloudFormation, use the followi
 --------
 ## Step 2: Lambda Function Upload 
 
-In this step, you will need to upload pre-packaged Lambda functions to S3. These Lambda functions will be used at various stages in our MLOps pipeline. Because we will be using CloudFormation and the AWS Serverless Application Model (SAM) to deploy the Lambda functions into our accounts, they must be uploaded be packaged and uploaded to S3 prior to executing our next CloudFormation template.
+In this step, you will need to upload pre-packaged Lambda functions to S3. These Lambda functions will be used at various stages in our MLOps pipeline. Because we will be using CloudFormation and the AWS Serverless Application Model (SAM) to deploy the Lambda functions into our accounts, they must be packaged and uploaded to S3 prior to executing our next CloudFormation template.
 
 
 **Steps:**
@@ -74,9 +74,9 @@ In this step, you will need to upload pre-packaged Lambda functions to S3. These
 
 4. Click ‘Add Files’, upload the following files that were provided as part of the class lab materials in the [**/lambda-code**](./lambda-code) folder:
 
- - **MLOps-BIA-TrainModel.py.zip:**  This Lambda function is responsible for executing a function that will accept various user parameters from code pipeline (ex. type of compute, volume size, number of training instances, algorithm name) and use that information to then setup a training job and train a model using SageMaker
+ - **MLOps-BIA-TrainModel.py.zip:**  This Lambda function is responsible for executing a function that will accept various user parameters from code pipeline (ex. type of compute, volume size, number of training instances, algorithm name) and use that information to setup a training job and train a model using SageMaker
 
-  - **MLOps-BIA-GetStatus.py.zip:** This Lambda function is responsible for checking back in on the status of the previous Lambda function.  Because Lambda has an execution time limit, this function ensures that the status of the previous function is accurately capture before moving on to the next stage in the pipeline
+  - **MLOps-BIA-GetStatus.py.zip:** This Lambda function is responsible for checking the status of the previous Lambda function.  Because Lambda has an execution time limit, this function ensures that the status of the previous function is accurately captured before moving on to the next stage in the pipeline
 
  - **MLOps-BIA-DeployModel.py.zip:** This Lambda function is responsible for executing a function that will accept various user parameters from code pipeline (ex. target deployment environment) and use that information to then setup a Configuration Endpoint and Endpoint for hosting the trained model using SageMaker
 
@@ -97,9 +97,9 @@ In this step, you will create a CloudFormation template using the file BuildPipe
 
 *  **IAM Roles:**
 
-   - **SageMaker Execution Role:**  This role will be utilized with our Lambda function code to establish a trusted relationship between a Lambda function and SageMaker.  The role gets created in the CloudFormation template as well as passed as a Environment Variable to the Lambda Function
+   - **SageMaker Execution Role:**  This role will be utilized with our Lambda function code to establish a trusted relationship between a Lambda function and SageMaker.  The role gets created in the CloudFormation template as well as passed as an Environment Variable to the Lambda Function
 
-   -	**Lambda Execution Role:** This role will be utilized by all of the Lambda functions created in this lab.  The role provides access to AWS services access by the Lambda functions including S3, SageMaker, CloudWatch, CodePipeline, ECR
+   -	**Lambda Execution Role:** This role will be utilized by all of the Lambda functions created in this lab.  The role provides access to AWS services accessed by the Lambda functions including S3, SageMaker, CloudWatch, CodePipeline, and ECR
 
    -	**CodeBuildRole:** This role will be utilized by CodeBuild to setup a trusted relationship for AWS services include CodeCommit and ECR.  
 
@@ -133,7 +133,7 @@ To launch the setup of the above resources using CloudFormation, use the followi
 
    * **RepositoryBranch:** master
 
-   * **UniqueID:** Enter yourinitials in lower case (Example: jdd)
+   * **UniqueID:** Enter your initials in lower case (Example: jdd)
   
 
 3. Under **Configure stack options:**
