@@ -5,7 +5,7 @@ The workshops contained in this repository are focused on demonstrating capabili
 ## Background 
 Applying DevOps practices to Machine Learning (ML) workloads is a fundamental practice to ensure models are deployed using a reliable and consistent process as well as establishing a strategy for retraining your models.
 
-DevOps is not about automating the deployment of a model.  It is about applying practices such as Continuous Integration(CI) and Continuous Delivery(CD) to the development lifecycle.  These practices rely on automation to achieve CI/CD but applying automation alone is not synonamous with CI/CD.  In this lab, you will create a deployment pipeline utilizing AWS Development Services and SageMaker to demonstrate how CI/CD can be applied to machine learning workloads.  There is no one-size-fits-all model for creating a pipeline; however, the same general concepts explored in this workshop can be applied across various services/tooling to meet the same end result. 
+DevOps is not about automating the deployment of a model.  It is about applying practices such as Continuous Integration(CI) and Continuous Delivery(CD) to the development lifecycle.  These practices rely on automation to achieve CI/CD but applying automation alone is not synonymous with CI/CD.  In this lab, you will create a deployment pipeline utilizing AWS Development Services and SageMaker to demonstrate how CI/CD can be applied to machine learning workloads.  There is no one-size-fits-all model for creating a pipeline; however, the same general concepts explored in this workshop can be applied across various services/tooling to meet the same end result. 
 
 ## Core Tenets
 
@@ -20,7 +20,7 @@ DevOps is not about automating the deployment of a model.  It is about applying 
 
 ## Workshop Contents
 
-This repository demonstrates the following use cases covering reference pipelines for common scenarios.   These are reference pipelines only and should be adjusted for as need for specific use cases. 
+This repository demonstrates the following use cases covering reference pipelines for common scenarios.   These are reference pipelines only and should be adjusted for specific use cases. 
 
 * **[Reference Pipeline #1:](/1-Built-In-Algorithm/README.md)** Pipeline using Amazon SageMaker built-in algorithm 
 
