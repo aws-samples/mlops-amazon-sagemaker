@@ -22,9 +22,9 @@ DevOps is not about automating the deployment of a model.  It is about applying 
 
 This repository demonstrates the following use cases covering reference pipelines for common scenarios.   These are reference pipelines only and should be adjusted for as need for specific use cases. 
 
-* **[Reference Pipeline #1:](../1-Built-In-Algorithm/README.md)** Pipeline using Amazon SageMaker built-in algorithm 
+* **[Reference Pipeline #1:](/1-Built-In-Algorithm/README.md)** Pipeline using Amazon SageMaker built-in algorithm 
 
-* **[Reference Pipeline #2:](../2-Bring-Your-Own/README.md)** Pipeline using Amazon Sagemaker and bring-your-own algorithm
+* **[Reference Pipeline #2:](/2-Bring-Your-Own/README.md)** Pipeline using Amazon Sagemaker and bring-your-own algorithm
 
 ## License
 
