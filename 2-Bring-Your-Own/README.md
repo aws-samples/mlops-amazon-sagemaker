@@ -16,12 +16,12 @@ For this portion of the workshop, we will be building the following pipeline:
 
 
 
-
-
 -------
 ## Prerequisite
 
 1) AWS Account & Administrator Access
+2) Please use North Virginia, **us-east-1** for this workshop
+
 
 ------
 
@@ -55,27 +55,38 @@ In this step, you will launch a CloudFormation template using the file 01.CF-MLO
 
 ### Steps:
 
-1. Login to the [AWS Console](https://https://console.aws.amazon.com/) and enter your credentials
+To launch the setup of the resources above using CloudFormation:
 
-2. To launch the setup of the resources above using CloudFormation, use the following link to launch the CloudFormation stack:
+1) Download this git repository by either cloning the repository or downloading the *zip
 
-    [![Launch Stack](../images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?#/stacks/new?stackName=ImmersionLab1&templateURL=https://s3-us-east-1.amazonaws.com/amazon-sagemaker-devops-with-ml/master/01.CF-MLOps-BYO-Lab-Prep.yml)
+2) Login to the [AWS Console](https://https://console.aws.amazon.com/) and enter your credentials
 
-3. Under **Specify Stack Details**, enter: 
+3) Under **Services**, select [CloudFormation](https://console.aws.amazon.com/cloudformation)
+
+4) Click **Create Stack** buttton
+
+5) Under **Select Template**:
+    * Click radio button next to 'Upload a template to Amazon S3', then click **Browse...**
+
+    * From the local repository cloned to your machine in step 1, select the file called ./2-Bring-Your-Own/01.CF-MLOps-BYO-Lab-Prep.yml
+
+    * Click **Open**
+
+6) Under **Specify Stack Details**, enter: 
 
    * **Stack Name**: MLOps-BYO-WorkshopSetup 
 
    *  **UniqueID**: Enter *yourinitials* in lower case (Example: jdd)
 
-4. Click **Next**
+7) Click **Next**
 
-5. Under **Configure stack options**, leave all defaults and click '**Next**'
+8) Under **Configure stack options**, leave all defaults and click '**Next**'
 
-6. Under **Review**, scroll to the bottom and check the checkbox acknowledging that CloudFormation might create IAM resources and custom names, then click **Create**
+9) Under **Review**, scroll to the bottom and check the checkbox acknowledging that CloudFormation might create IAM resources and custom names, then click **Create**
 
-7. You will be returned to the CloudFormation console and will see your stack status '**CREATE_IN_PROGRESS**'
+10) You will be returned to the CloudFormation console and will see your stack status '**CREATE_IN_PROGRESS**'
 
-8. After a few minutes, you will see your stack Status change to '**CREATE_COMPLETE**'.  You're encouraged to go explore the resources created as part of this initial setup. 
+11) After a few minutes, you will see your stack Status change to '**CREATE_COMPLETE**'.  You're encouraged to go explore the resources created as part of this initial setup. 
 
 
 ---
@@ -139,11 +150,18 @@ In this step, you will launch a CloudFormation template using the file 02.CF-MLO
 
 ### Steps:
 
-1. Login to the [AWS Console](https://https://console.aws.amazon.com/) and enter your credentials
+1) Login to the [AWS Console](https://https://console.aws.amazon.com/) and enter your credentials
 
-2. To launch the setup of the resources above using CloudFormation, use the following link to launch the CloudFormation stack:
+2) Under **Services**, select [CloudFormation](https://console.aws.amazon.com/cloudformation)
 
-    [![Launch Stack](../images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?#/stacks/new?stackName=ImmersionLab1&templateURL=https://s3-us-east-1.amazonaws.com/amazon-sagemaker-devops-with-ml/master/02.CF-MLOps-BYO-BuildPipeline.yml)
+3) Click **Create Stack** buttton
+
+4) Under **Select Template**:
+    * Click radio button next to 'Upload a template to Amazon S3', then click **Browse...**
+
+    * From the local repository cloned to your machine in step 1, select the file called ./2-Bring-Your-Own/02.CF-MLOps-BYO-BuildPipeline.yml
+
+    * Click **Open**
 
 3. Under **Specify Stack Details**, enter: 
 
