@@ -52,7 +52,8 @@ Resources:
                 git clone https://github.com/aws-samples/amazon-sagemaker-devops-with-ml.git
                 pwd
                 ls -la
-                cp -R /home/ec2-user/amazon-sagemaker-devops-with-ml/2-Bring-Your-Own/* /home/ec2-user/SageMaker/
+                mkdir /home/ec2-user/SageMaker/byo-staging
+                cp -R /home/ec2-user/amazon-sagemaker-devops-with-ml/2-Bring-Your-Own/* /home/ec2-user/SageMaker/byo-staging/
     DependsOn: CodeCommitRepo
  
   SageMakerNotebookInstance:
