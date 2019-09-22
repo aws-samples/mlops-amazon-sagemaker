@@ -33,27 +33,27 @@ For this portion of the workshop, we will be building the following pipeline:
 ----
 ## Lab Overview
 
-This lab will utilize an existing SageMaker algorithm, [XGBoost](https://docs.aws.amazon.com/sagemaker/latest/dg/xgboost.html), to train a model and deploy it to various environments for validation using a pipeline created in [AWS CodePipeline](https://aws.amazon.com/codepipeline/).  The pipeline will be setup to trigger based on new training data and/or manual execution of the pipeline. 
+This lab will utilize a built-in SageMaker algorithm, [XGBoost](https://docs.aws.amazon.com/sagemaker/latest/dg/xgboost.html), to train a model and deploy it to various environments for validation using a pipeline created in [AWS CodePipeline](https://aws.amazon.com/codepipeline/).  The pipeline will be setup to trigger based on new training data and/or manual execution of the pipeline. 
 
 --------
 ## Step 1: Workshop Preparation
 
 First, we will execute a Cloud Formation template to do some initial setup of our environment including creating: 
 
-1) **[AWS CodeCommit](https://aws.amazon.com/codecommit/) Repositories:** AWS CodeCommit repositories that will store our:
+* **[AWS CodeCommit](https://aws.amazon.com/codecommit/) Repositories:** AWS CodeCommit repositories that will store our:
 
      - **Training Config:** configuration code used for training the model (ex. hyperparameters)
     - **Pipeline Lambda Code:** code that we will use for training and deploying our model using Amazon SageMaker
     - **Inference Lambda Code:** code that we will use for evaluation of the model by running predictions against our hosted model 
     *Note: These repositories could be created in GitHub as an alternative to AWS CodeCommit* 
 
-2) **S3 Bucket for [Lambda Functions:](https://aws.amazon.com/lambda/)** that will store:
+ * **S3 Bucket for [Lambda Functions:](https://aws.amazon.com/lambda/)** 
 
     - **Lambda Pipeline Functions:** Lambda function code that will be used in a later step to build an end-to-end ML pipeline within CodePipeline 
 
-3) **[SageMaker Notebook Instance:](https://docs.aws.amazon.com/sagemaker/latest/dg/nbi.html)** This notebook instance will be used for running workshop steps in a consistent lab environment.  
+* **[SageMaker Notebook Instance:](https://docs.aws.amazon.com/sagemaker/latest/dg/nbi.html)** This notebook instance will be used as our lab environment after our initial setups required for setting up the lab/pipeline.  We are utilizing a notebook instance instead fo a local environment to ensure a consistent lab environment.  
 
-4) **[SageMaker Notebook lifecycle configuration:](https://docs.aws.amazon.com/sagemaker/latest/dg/notebook-lifecycle-config.html)** Lifecycle configuration created to automatically clone this repository including the notebook instance included for this workshop. 
+* **[SageMaker Notebook lifecycle configuration:](https://docs.aws.amazon.com/sagemaker/latest/dg/notebook-lifecycle-config.html)** Lifecycle configuration created to automatically clone this workshop repository including the notebook instance included for this workshop. 
 
   
 
@@ -67,7 +67,7 @@ To launch the setup of the resources above using CloudFormation:
 
 3) Under **Services**, select [CloudFormation](https://console.aws.amazon.com/cloudformation)
 
-4) Click **Create Stack** buttton
+4) Click **Create Stack** buttton,  then click **Next**
 
 5) Under **Select Template**:
     * Click radio button next to 'Upload a template to Amazon S3', then click **Browse...**
@@ -87,13 +87,15 @@ To launch the setup of the resources above using CloudFormation:
 
 7) Click **Next** 
 
-8) Under **Configure stack options**, leave all defaults and click '**Next**'
+8) Under **Configure stack options**, leave all defaults and click **Next**
 
 9) Under **Review**, scroll to the bottom and check the checkbox acknowledging that CloudFormation might create IAM resources and custom names, then click **Create**
 
-10) You will be returned to the CloudFormation console and will see your stack status '**CREATE_IN_PROGRESS**'
+![01CloudFormation](images/CF-AcknowledgeIAM.png)
 
-11) After a few mimutes, you should see your stack Status change to '**CREATE_COMPLETE**'.  You're encouraged to go explore the resources noted above that are created as part of this initial setup. 
+10) You will be returned to the CloudFormation console and will see your stack status **CREATE_IN_PROGRESS**
+
+11) After a few mimutes, you should see your stack Status change to **CREATE_COMPLETE**.  You're encouraged to go explore the resources noted above that are created as part of this initial setup. 
 
 
 --------
@@ -112,30 +114,33 @@ In this step, you will need to upload pre-packaged Lambda functions to S3. These
 
 3. In the upper left hand corner, click **Upload**
 
+![S3Upload](images/S3-Upload.png)
+
 4. Click **Add Files**, upload the following files from your local machine that were provided as part of the class lab materials and cloned from the repository in the [**/lambda-code**](./lambda-code) folder:
 
- - **MLOps-BIA-TrainModel.py.zip:**  This Lambda function is responsible for executing a function that will accept various user parameters from code pipeline as input including: SageMaker Built-In Algorithm Name, Training Compute, Instance Volume Size, and [XGBoost Hyperparameters](https://docs.aws.amazon.com/sagemaker/latest/dg/xgboost_hyperparameters.html).  That information will be used along with environment variables setup to create a SageMaker training job and train a model using SageMaker
+   - **MLOps-BIA-TrainModel.py.zip:**  This Lambda function is responsible for executing a function that will accept various user parameters from code pipeline as input including: SageMaker Built-In Algorithm Name, Training Compute, Instance Volume Size, and [XGBoost Hyperparameters](https://docs.aws.amazon.com/sagemaker/latest/dg/xgboost_hyperparameters.html).  That information will be used along with environment variables setup to create a SageMaker training job and train a model using SageMaker
 
-  - **MLOps-BIA-GetStatus.py.zip:** This Lambda function is responsible for checking the status of the previous Lambda function.  Because Lambda has an execution time limit, this function ensures that the status of the previous function is accurately captured before moving on to the next stage in the pipeline
+   - **MLOps-BIA-GetStatus.py.zip:** This Lambda function is responsible for checking the status of the previous Lambda function.  Because Lambda has an execution time limit, this function ensures that the status of the previous function is accurately captured before moving on to the next stage in the pipeline
 
- - **MLOps-BIA-DeployModel.py.zip:** This Lambda function is responsible for executing a function that will accept user parameters from CodePipeline including: Hosting Instance Type, Hosting Instance, Hosting Instance Code, Variant Weight, Endpoint Configuration Name (ex. Dev / Test / Prod). That information is used to setup a Configuration Endpoint and Endpoint for hosting the trained model using SageMaker
+   - **MLOps-BIA-DeployModel.py.zip:** This Lambda function is responsible for executing a function that will accept user parameters from CodePipeline including: Hosting Instance Type, Hosting Instance, Hosting Instance Code, Variant Weight, Endpoint Configuration Name (ex. Dev / Test / Prod). That information is used to setup a Configuration Endpoint and Endpoint for hosting the trained model using SageMaker
 
-  -	**MLOps-BIA-EvaluateModel.py.zip:** This Lambda function is responsible for running predictions against the trained model by accepting an environment identifier as well as an S3 bucket with sample payload as input from code pipeline.  
+    - **MLOps-BIA-EvaluateModel.py.zip:** This Lambda function is responsible for running predictions against the trained model by accepting an environment identifier as well as an S3 bucket with sample payload as input from code pipeline.  
 
-5. After selecting the files above from your local system, click ‘**Next**’
+5. After selecting the files above from your local system, click **Next**
 
-6. For (2) Select Permissions & (3) Set Properties,  accept default values and click ‘**Next**’
+6. For (2) Set Permissions & (3) Set Properties,  accept default values and click **Next**
 
 7. For (4) Review, review the settings and click ‘**Upload**
 
 8. Validate that you now see all files successfully uploaded to your S3 bucket, then continue to the next step.
 
-    ![S3Lambda Functions](images/lambda-functions-s3.png)
+    ![S3Lambda Functions](images/s3-lambda-functions.png)
+
 
 --------
 ## Step 3: Create Pipeline Environment
 
-In this step, you will create a CloudFormation template using the file 02.CF-MLOps-BIA-BuildPipeline.yml provided as part of workshop materials.  This CloudFormation template accepts input parameters that will be used to setup base components of our CI/CD pipeline including: 
+In this step, you will execute a CloudFormation template using the file 02.CF-MLOps-BIA-BuildPipeline.yml provided as part of workshop materials. This CloudFormation template accepts input parameters that will be used to setup base components of our CI/CD pipeline including: 
 
 *  **IAM Roles:**
 
@@ -199,12 +204,14 @@ To launch the setup of the resources above using CloudFormation:
 
    * **UniqueID:** Enter your initials in lower case (Example: jdd)
   
+  ![01CloudFormation](images/CF-BIA-BuildPipeline.png)
+
 
 8) Click **Next**
 
 9) Under **Configure stack options:**
 
-   * Accept all defaults and click ‘**Next**’
+   * Accept all defaults and click **Next**
 
 10)	Review your settings, scroll down and click the checkbox at the bottom of the screen agknowledging that you want CloudFormation to create the IAM roles identified in the CloudFormation template.  Click **Create**.
 
@@ -226,35 +233,59 @@ In this step, you will execute activities within a SageMaker Notebook Instance t
 2. Select **Services** from the top menu, and choose **Amazon SageMaker** 
 
 3. Click on **Notebook Instances**
+![Notebook Instance](images/SageMaker-Notebook-Instance.png)
+
 
 4. You should see a notebook instance, created by the CloudFormation template, called **MLOps-BIA-Notebook-***.  Click **Open Jupyter**
 
-   ![Notebook Instance](images/SM-NoteboookInstance.png)
+5. Under the **Files** tab, you will see a folder called **MLOps-codecommit-byo** and a root folder:
+
+   * Click on the root folder
+
+   ![Notebook Instance](images/SM-Notebook1.png)
+
+   * Within that folder is a notebook we will be using for the remainder of the workshop called **03.MLOps-BIA-LabNotebook.ipynb**.  
+
+6. Click on the **03.MLOps-BIA-LabNotebook.ipynb** notebook, and it will bring you into your Jupyter Notebook instance environment.  
+
+![Notebook Instance](images/SM-Notebook2.png)
 
 
 
 
-5. Under the **Files** tab, you will see a folder called **MLOps-codecommit-byo**.   Within that folder is a notebook we will be using for the remainder of the workshop called **03.MLOps-BIA-LabNotebook.ipynb**.  
 
-6. Click on that notebook, and it will bring you into your Jupyter Notebook instance environment.  The remainder of the workshop will be conducted inside the Jupyter Notebook instance.  If you are not familiar with working inside notebook instance environments, the main items you will need to know for this workshop are below: 
+The remainder of the workshop will be conducted inside the Jupyter Notebook instance.  If you are not familiar with working inside notebook instance environments, the main items you will need to know for this workshop are below: 
 
    * To execute the current code cell, you can click **Run** on the top menu or Shift + Enter
 
-   * **EXECUTE THE CELLS IN ORDER, WAITING FOR THE PREVIOUS TO SUCCESSFULLY COMPLETE BEFORE EXECUTING THE NEXT**.   A cell has completed execution when there is a number in the bracked next to the cell as shown below.   If the cell is still executing, you will see [*]
+   * **IMPORTANT:  EXECUTE THE CELLS IN ORDER, WAITING FOR THE PREVIOUS TO SUCCESSFULLY COMPLETE BEFORE EXECUTING THE NEXT**.   A cell has completed execution when there is a number in the bracked next to the cell as shown below.   If the cell is still executing, you will see [*]
 
 ---
 
 ## Step 6: Clean-Up
 
-In addition to the steps for clean-up noted in your notebook instance, please execute the following clean-up steps:
-1. Login to the [AWS Console](https://https://console.aws.amazon.com/) and enter your credentials
+In addition to the steps for clean-up noted in your notebook instance, please execute the following clean-up steps.  Note: These steps can be automated and/or done programmatically but doing manual clean to enforce what was created during the workshop. 
+
+1. Login to the [AWS Console](https://https://console.aws.amazon.com/) and enter your credentials   
 
 2. Select **Services** from the top menu, and choose **Amazon SageMaker**
 
-   * Go to **Notebook Instances**, select your notebook instance by selecting the radio button next to it.
+   **Notebook Instance**
+   * Go to **Notebook Instances** on the left hand menu, select your notebook instance by selecting the radio button next to it.
 
-   * Select **Actions** and then **Stop** from the dropdown list
+   *  Select **Actions** and then **Stop** from the dropdown list
 
-3. Select **Services** from the top menu, and choose **CloudFormation**
+   **Endpoints**
+   * Go to **Inference / Endpoints** on the left hand menu, click the radio button next to each endpoint. 
 
-3. For the two stacks that were created in this workshop (MLOps-*), click the checkbox next to the stack.  Select **Actions** , then **Delete Stack**
+   * Select **Actions** and then **Delete**, then confirm delete hitting the **Delete** button. 
+
+3. Select **Services** from the top menu, and choose **S3**
+
+    * [Delete objects from S3 buckets](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/delete-objects.html): 
+       
+       - mlops-bia-*
+
+4. Select **Services** from the top menu, and choose **CloudFormation**
+
+   * For the two stacks that were created in this workshop (MLOps-*), click the checkbox next to the stack.  Select **Actions** , then **Delete Stack**

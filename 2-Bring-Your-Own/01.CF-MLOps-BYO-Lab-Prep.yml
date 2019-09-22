@@ -49,8 +49,10 @@ Resources:
                 set -e
                 sudo -i -u ec2-user bash << EOF
                 echo "Setup the Workshop exercises"
-                git clone --bare https://github.com/aws-samples/amazon-sagemaker-devops-with-ml.git /home/ec2-user/SageMaker/lab-package-tmp
-                cp -R /home/ec2-user/SageMaker/lab-package-tmp/amazon-sagemaker-devops-with-ml/2-Bring-Your-Own/* /home/ec2-user/SageMaker/mlops-codecommit-byo/
+                git clone https://github.com/aws-samples/amazon-sagemaker-devops-with-ml.git
+                pwd
+                ls -la
+                cp -R /home/ec2-user/amazon-sagemaker-devops-with-ml/2-Bring-Your-Own/* /home/ec2-user/SageMaker/
     DependsOn: CodeCommitRepo
  
   SageMakerNotebookInstance:

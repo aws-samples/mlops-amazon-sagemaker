@@ -345,7 +345,7 @@ Resources:
           SSEKMSKeyIdIn: !Ref KMSMasterKeyID
           ModelArtifactBucket: !Ref ModelArtifactBucket
           S3DataBucket: !Ref S3DataBucket
-          AlgoECR: "683313688378.dkr.ecr.us-east-1.amazonaws.com"
+          AlgoECR: "811284229777.dkr.ecr.us-east-1.amazonaws.com"
       FunctionName: 
         Fn::Join:
          - ""
@@ -355,6 +355,7 @@ Resources:
         S3Bucket: !Ref LambdaFunctionsBucket
         S3Key: "MLOps-BIA-TrainModel.py.zip"
       Runtime: "python3.6"
+      Timeout: 900
 
   DeployLambdaFunction:
     Type: "AWS::Lambda::Function"
@@ -374,6 +375,7 @@ Resources:
         S3Bucket: !Ref LambdaFunctionsBucket
         S3Key: "MLOps-BIA-DeployModel.py.zip"
       Runtime: "python3.6"
+      Timeout: 900
 
   GetStatusLambdaFunction:
     Type: "AWS::Lambda::Function"
@@ -393,6 +395,7 @@ Resources:
         S3Bucket: !Ref LambdaFunctionsBucket
         S3Key: "MLOps-BIA-GetStatus.py.zip"
       Runtime: "python3.6"
+      Timeout: 900
 
   EvaluateModelLambdaFunction:
     Type: "AWS::Lambda::Function"
@@ -413,7 +416,7 @@ Resources:
         S3Bucket: !Ref LambdaFunctionsBucket 
         S3Key: "MLOps-BIA-EvaluateModel.py.zip"
       Runtime: "python3.6"
-      Timeout: 600
+      Timeout: 900
 
   LambdaExecutionRole:
     Type: AWS::IAM::Role
