@@ -293,7 +293,7 @@ Resources:
                     - ""
                     - - "MLOps-BIA-DeployModel-"
                       - !Ref UniqueID
-                UserParameters: '{ InitialInstanceCount": 1, "InitialVariantWeight": 1, "InstanceType": "ml.t2.medium", "EndpointConfigName": "Prod" }'
+                UserParameters: '{ "InitialInstanceCount": 1, "InitialVariantWeight": 1, "InstanceType": "ml.t2.medium", "EndpointConfigName": "Prod" }'
               RunOrder: 1
             - 
               Name: GetDeployStatus
