@@ -282,9 +282,12 @@ In addition to the steps for clean-up noted in your notebook instance, please ex
 
 3. Select **Services** from the top menu, and choose **S3**
 
-    * [Delete objects from S3 buckets](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/delete-objects.html): 
+    * Delete all S3 buckets created for this workshop with the following naming convention: 
+      - mlops-bia-*
+    
+    * Click the box next to each bucket and click **Delete** -> confirm deletion
        
-       - mlops-bia-*
+       
 
 4. Select **Services** from the top menu, and choose **CloudFormation**
 
