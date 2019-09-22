@@ -402,6 +402,7 @@ Resources:
         S3Bucket: !Ref LambdaFunctionsBucket
         S3Key: "MLOps-BYO-TrainModel.py.zip"
       Runtime: "python3.6"
+      Timeout: 900
 
   DeployLambdaFunction:
     Type: "AWS::Lambda::Function"
@@ -421,6 +422,7 @@ Resources:
         S3Bucket: !Ref LambdaFunctionsBucket
         S3Key: "MLOps-BYO-DeployModel.py.zip"
       Runtime: "python3.6"
+      Timeout: 900
 
   GetStatusLambdaFunction:
     Type: "AWS::Lambda::Function"
@@ -440,6 +442,7 @@ Resources:
         S3Bucket: !Ref LambdaFunctionsBucket
         S3Key: "MLOps-BYO-GetStatus.py.zip"
       Runtime: "python3.6"
+      Timeout: 900
 
   EvaluateModelLambdaFunction:
     Type: "AWS::Lambda::Function"
@@ -460,7 +463,7 @@ Resources:
         S3Bucket: !Ref LambdaFunctionsBucket 
         S3Key: "MLOps-BYO-EvaluateModel.py.zip"
       Runtime: "python3.6"
-      Timeout: 600
+      Timeout: 900
 
   CodeBuildRole:
     Type: AWS::IAM::Role
