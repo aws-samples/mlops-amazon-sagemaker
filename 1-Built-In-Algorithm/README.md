@@ -84,6 +84,7 @@ To launch the setup of the resources above using CloudFormation:
      * **Stack Name**: Recognizable name such as 'MLOps-BIA-WorkshopSetup'
 
      *  **UniqueID**: Enter *yourinitials* in lower case only [Example: jdd]
+     
         **IMPORTANT: Use a 3-character initial as shown above**
 
 7) Click **Next** 
@@ -204,6 +205,8 @@ To launch the setup of the resources above using CloudFormation:
    * **RepositoryBranch:** master
 
    * **UniqueID:** Enter your initials in lower case (Example: jdd)
+   
+     **IMPORTANT: Use a 3-character initial as shown above**
   
   ![01CloudFormation](images/CF-BIA-BuildPipeline.png)
 
