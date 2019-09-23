@@ -79,6 +79,8 @@ To launch the setup of the resources above using CloudFormation:
    * **Stack Name**: MLOps-BYO-WorkshopSetup 
 
    *  **UniqueID**: Enter *yourinitials* in lower case (Example: jdd)
+   
+      **IMPORTANT: Use a 3-character initial as shown above**
 
    ![BYO Workshop Setup](images/CF-LabSetup-1-BYO.png)
 
@@ -184,6 +186,8 @@ In this step, you will launch a CloudFormation template using the file 02.CF-MLO
 
    *  **RepositoryBranch**: master
    *  **UniqueID**: Enter *yourinitials* in lower case (Example: jdd)
+   
+      **IMPORTANT: Use a 3-character initial as shown above**
 
    ![BYO Build Pipeline](images/CF-BuildPipeline-1-BYO.png)
 
