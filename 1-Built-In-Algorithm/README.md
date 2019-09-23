@@ -223,6 +223,8 @@ To launch the setup of the resources above using CloudFormation:
 
 12) After a few minutes, you will see your stack Status change to **'CREATE_COMPLETE'**. You're encouraged to go explore the resources created as part of this initial setup.
 
+**NOTE: CodePipeline will automatically kickoff after this step; however, since we have not yet added data to the S3 bucket - it will error on the initial kickoff which is expected. Adding data to the S3 bucket is executed in Step 4 below. **
+
 ---
 ## Step 4: Trigger Pipeline Executions
 
