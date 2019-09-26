@@ -99,7 +99,7 @@ To launch the setup of the resources above using CloudFormation:
 
 ---
 
-## Step 3: Upload Lambda Functions to S3
+## Step 2: Upload Lambda Functions to S3
 
 In this step, you will need to upload pre-packaged Lambda functions to S3.  These Lambda functions will be used at various stages in our MLOps pipeline.  Because we will be using CloudFormation and the [AWS Serverless Application Model (SAM)](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html) to deploy the Lambda functions into our accounts, they must be uploaded be packaged and uploaded to S3 prior to executing our next CloudFormation template.  
 
@@ -136,7 +136,7 @@ You should now see all of your packaged lambda functions stored as object inside
 
 ---
 
-## Step 4: Build the Base MLOps Pipeline
+## Step 3: Build the Base MLOps Pipeline
 
 In this step, you will launch a CloudFormation template using the file 02.CF-MLOps-BYO-BuildPipeline.yml provided as part of workshop materials to build out the pipeline we will be using to train and deploy our models.  This CloudFormation template accepts 4 input parameters that will be used to setup base components including:
 
@@ -206,7 +206,7 @@ In this step, you will launch a CloudFormation template using the file 02.CF-MLO
 
 ---
 
-## Step 5: Trigger Pipeline Executions
+## Step 4: Trigger Pipeline Executions
 
 In this step, you will execute several activities within a SageMaker Notebook Instance to:
    
@@ -253,7 +253,7 @@ In this step, you will execute several activities within a SageMaker Notebook In
 
 ---
 
-## Step 6: Clean-Up
+## Step 5: Clean-Up
 
 In addition to the steps for clean-up noted in your notebook instance, please execute the following clean-up steps.  Note: These steps can be automated and/or done programmatically but doing manual clean to enforce what was created during the workshop. 
 
