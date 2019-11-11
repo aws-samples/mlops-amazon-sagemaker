@@ -84,6 +84,8 @@ To launch the setup of the resources above using CloudFormation:
      * **Stack Name**: Recognizable name such as 'MLOps-BIA-WorkshopSetup'
 
      *  **UniqueID**: Enter *yourinitials* in lower case only [Example: jdd]
+     
+        **IMPORTANT: Use a 3-character initial as shown above**
 
 7) Click **Next** 
 
@@ -203,6 +205,8 @@ To launch the setup of the resources above using CloudFormation:
    * **RepositoryBranch:** master
 
    * **UniqueID:** Enter your initials in lower case (Example: jdd)
+   
+     **IMPORTANT: Use a 3-character initial as shown above**
   
   ![01CloudFormation](images/CF-BIA-BuildPipeline.png)
 
@@ -218,6 +222,8 @@ To launch the setup of the resources above using CloudFormation:
 11) You will be returned to the CloudFormation console and will see your stack status **'CREATE_IN_PROGRESS'**
 
 12) After a few minutes, you will see your stack Status change to **'CREATE_COMPLETE'**. You're encouraged to go explore the resources created as part of this initial setup.
+
+**NOTE: CodePipeline will automatically kickoff after this step; however, since we have not yet added data to the S3 bucket - it will error on the initial kickoff which is expected. Adding data to the S3 bucket is executed in Step 4 below. **
 
 ---
 ## Step 4: Trigger Pipeline Executions
