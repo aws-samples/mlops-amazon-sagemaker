@@ -35,13 +35,41 @@ Resources:
   CodeCommitRepo:
     Type: AWS::CodeCommit::Repository
     Properties:
-      RepositoryName: "mlops-codecommit-BIA"
+      RepositoryName: 
+        Fn::Join:
+          - ""
+          - - "mlops-codecommit-BIA-"
+            - !Ref UniqueID
+            - "-"
+            - !Select
+             - 0
+             - !Split
+              - "-"
+              - !Select
+                - 2
+                - !Split
+                  - "/"
+                  - !Ref "AWS::StackId"
       RepositoryDescription: "MLOps BIA Code Commit Repository"
 
   SageMakerNotebookLifecycleConfig:
     Type: AWS::SageMaker::NotebookInstanceLifecycleConfig
     Properties: 
-      NotebookInstanceLifecycleConfigName: "MLOps-BIA-Lifecycle-Config"
+      NotebookInstanceLifecycleConfigName: 
+        Fn::Join:
+          - ""
+          - - "MLOps-BIA-Lifecycle-Config-"
+            - !Ref UniqueID
+            - "-"
+            - !Select
+             - 0
+             - !Split
+              - "-"
+              - !Select
+                - 2
+                - !Split
+                  - "/"
+                  - !Ref "AWS::StackId"
       OnCreate:
         - Content: 
             Fn::Base64: !Sub |
@@ -61,7 +89,7 @@ Resources:
     Properties: 
       DefaultCodeRepository: !GetAtt CodeCommitRepo.CloneUrlHttp
       InstanceType: ml.t3.medium
-      LifecycleConfigName: "MLOps-BIA-Lifecycle-Config"
+      LifecycleConfigName: !GetAtt SageMakerNotebookLifecycleConfig.NotebookInstanceLifecycleConfigName
       NotebookInstanceName: 
         Fn::Join:
             - ""
