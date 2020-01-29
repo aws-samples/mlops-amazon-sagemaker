@@ -51,7 +51,7 @@ First, we will execute a Cloud Formation template to do some initial setup of ou
 
     - **Lambda Pipeline Functions:** Lambda function code that will be used in a later step to build an end-to-end ML pipeline within CodePipeline 
 
-* **[SageMaker Notebook Instance:](https://docs.aws.amazon.com/sagemaker/latest/dg/nbi.html)** This notebook instance will be used as our lab environment after our initial setups required for setting up the lab/pipeline.  We are utilizing a notebook instance instead fo a local environment to ensure a consistent lab environment.  
+* **[SageMaker Notebook Instance:](https://docs.aws.amazon.com/sagemaker/latest/dg/nbi.html)** This notebook instance will be used as our lab environment after our initial setups required for setting up the lab/pipeline.  We are utilizing a notebook instance instead of a local environment to ensure a consistent lab environment.  
 
 * **[SageMaker Notebook lifecycle configuration:](https://docs.aws.amazon.com/sagemaker/latest/dg/notebook-lifecycle-config.html)** Lifecycle configuration created to automatically clone this workshop repository including the notebook instance included for this workshop. 
 
