@@ -1,0 +1,25 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Prepare resources for MLOps Pipeline
+#Parameters:
+ # UniqueID:
+  #  Type: String
+   # Default: yourinitials
+    #Description: Enter your initials in lower case as a unique identifier for components created
+    #AllowedPattern: "^([a-z]|(d(?!d{0,2}.d{1,3}.d{1,3}.d{1,3})))([a-zd]|(.(?!(.|-)))|(-(?!.))){1,61}[a-zd.]$"
+
+Resources:
+  S3PipelineLambdaFunctionCode:
+    Type: AWS::S3::Bucket
+    Properties: 
+      AccessControl: BucketOwnerFullControl
+      VersioningConfiguration: 
+        Status: Enabled
+      BucketName:
+        Fn::Join:
+          - "-"
+          - - "mlops-bia-lambda-functions"
+            - !Ref "AWS::AccountId"
+Outputs:
+      S3PipelineLambdaFunctionCode:
+        Description: The ID of the S3 Bucket for lambda functions
+        Value: !Ref S3PipelineLambdaFunctionCode

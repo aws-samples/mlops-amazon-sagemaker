@@ -1,0 +1,298 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Stack for complete deployment of DataScientist Sandboxes
+
+Parameters:
+  SagemakerInstance: 
+    Type: String
+    Default: Small
+    Description: 'Instance type for Sagemaker Notebook.'
+    AllowedValues: ['Small','Medium','Large']
+  TeamName: 
+    Type: String
+    Default: mnist
+    Description: 'Name of your team'
+    AllowedValues: ['forecasting', 'sentiment-analysis', 'mnist']
+
+Mappings:
+  AuthInfo:
+    GenKey:
+      value: 'true'
+  InstanceSize:
+    Small:
+      size: 'ml.t3.medium'
+    Medium:
+      size: 'ml.t3.large'
+    Large:
+      size: 'ml.t3.xlarge'
+  ServiceInfo:
+    StackName: 
+      value: 'DataScientist-infrastructure'
+    ServiceName:
+      value: 'metadata-service'
+
+Resources:
+  DataScientistS3Bucket:
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: Retain
+    Properties:
+      AccessControl: Private
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LifecycleConfiguration:
+        Rules:
+          - ExpirationInDays: 15
+            Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+  SagemakerSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: 'Security Group for Sagemaker'
+      VpcId: !Join ['', ['{{resolve:ssm:', !Ref TeamName, '-vpc:1}}' ]]
+      SecurityGroupIngress:
+        - CidrIp: "0.0.0.0/0"
+          IpProtocol: "TCP"
+          FromPort: 8080
+          ToPort: 8080
+  SageMakerExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Service:
+              - sagemaker.amazonaws.com
+          Action:
+            - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: IAM_PASS_ROLE
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              Sid: AllowPassRole
+              Effect: Allow
+              Action: iam:PassRole
+              Resource: '*'
+              Condition:
+                StringEquals:
+                  iam:PassedToService: sagemaker.amazonaws.com
+        - PolicyName: MISC_PERMISSIONS
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              Sid: MiscPermissions
+              Effect: Allow
+              Action:
+                - cloudwatch:PutMetricData
+                - cloudwatch:GetMetricStatistics
+              Resource: '*'
+        - PolicyName: log_roles_policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Sid: CreateLogStream
+              Effect: Allow
+              Action:
+                - logs:CreateLogStream
+              Resource: 
+                - !Join [ "", [ 'arn:aws:logs:', !Ref 'AWS::Region', ':', !Ref 'AWS::AccountId', ':log-group:/aws/sagemaker/NotebookInstances:log-stream:*' ] ]
+            - Sid: LogEvents
+              Effect: Allow
+              Action:
+                - logs:PutLogEvents
+                - logs:GetLogEvents
+              Resource: 
+                - !Join [ "", [ 'arn:aws:logs:', !Ref 'AWS::Region', ':', !Ref 'AWS::AccountId', ':log-group:/aws/sagemaker/NotebookInstances:log-stream:', !Ref 'AWS::StackName', '-NotebookInstance-', !Ref TeamName, '/jupyter.log' ] ]
+                - !Join [ "", [ 'arn:aws:logs:', !Ref 'AWS::Region', ':', !Ref 'AWS::AccountId', ':log-group:/aws/sagemaker/NotebookInstances:log-stream:', !Ref 'AWS::StackName', '-NotebookInstance-', !Ref TeamName, '/LifecycleConfigOnCreate' ] ]
+            - Sid: LogGroup
+              Effect: Allow
+              Action: 
+                - logs:DescribeLogGroups
+                - logs:DescribeLogStreams
+                - logs:CreateLogGroup
+              Resource: '*'
+        - PolicyName: SageMakerPermissions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              Sid: SageMakerNotebook
+              Effect: "Allow"
+              Action: 
+                - "sagemaker:DescribeNotebook*"
+                - "sagemaker:StartNotebookInstance"
+                - "sagemaker:StopNotebookInstance"
+                - "sagemaker:UpdateNotebookInstance"
+                - "sagemaker:CreatePresignedNotebookInstanceUrl"
+              Resource:
+                - !Sub "arn:aws:sagemaker:${AWS::Region}:${AWS::AccountId}:notebook-instance/${AWS::StackName}*"
+                - !Sub "arn:aws:sagemaker:${AWS::Region}:${AWS::AccountId}:notebook-instance-lifecycle-config/basic*"
+        - PolicyName: SageMakerTrainDeployPermissions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              Action:
+                - "sagemaker:CreateTrainingJob"
+                - "sagemaker:DescribeTrainingJob"
+                - "sagemaker:CreateModel"
+                - "sagemaker:CreateEndpoint"
+                - "sagemaker:CreateEndpointConfig"
+                - "sagemaker:DescribeEndpoint"
+                - "sagemaker:InvokeEndpoint"
+              Resource: '*'
+              Effect: "Allow"
+              Sid: SageMakerTrainDeploy
+        - PolicyName: CustomS3ListAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              Sid: BucketAccess
+              Effect: Allow
+              Action: s3:ListBucket
+              Resource: !GetAtt 'DataScientistS3Bucket.Arn'
+        - PolicyName: CustomS3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              Sid: ObjectAccess
+              Effect: Allow
+              Action:
+                - s3:PutObject
+                - s3:GetObject
+                - s3:DeleteObject
+              Resource: !Join ['', [ !GetAtt 'DataScientistS3Bucket.Arn', '/*' ]]
+        - PolicyName: DenyPresigned
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              Sid: DenyPresigned
+              Effect: Deny
+              Action: s3:*
+              Resource: '*'
+              Condition:
+                StringNotEquals:
+                  s3:authType: REST-HEADER
+        - PolicyName: crossaccountaccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              Effect: Allow
+              Action: sts:AssumeRole
+              Resource: !Join ['', ['arn:aws:iam::', '{{resolve:ssm:', 'ToolsAccountID', ':1}}', ':role/AllowAccessToDataScienceAccountRole-', '{{resolve:ssm:', 'ToolsAccountID', ':1}}' ]]
+        - PolicyName: CustomSSMPermissions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              Effect: Allow
+              Action:
+                - ssm:GetParameter
+                - ssm:GetParameterHistory
+                - ssm:GetParameters
+              Resource: !Join [':', ['arn:aws:ssm', !Ref 'AWS::Region', !Ref 'AWS::AccountId', 'parameter/ToolsAccountID' ]]
+
+  KMSKeyId:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: KMS Key for sagemaker Notebook's EBS encryption
+      EnableKeyRotation: true
+      Enabled: true
+      KeyPolicy:
+        Id: key-default-1
+        Statement:
+        - Action:
+          - kms:DeleteAlias
+          - kms:DescribeKey
+          - kms:EnableKey
+          - kms:GetKeyPolicy
+          - kms:UpdateAlias
+          - kms:CreateAlias
+          - kms:GetKeyPolicy
+          - kms:CreateGrant
+          - kms:DisableKey
+          - kms:Revoke*
+          - kms:Disable*
+          - kms:CancelKeyDeletion
+          - kms:ScheduleKeyDeletion
+          - kms:PutKeyPolicy
+          - kms:RevokeGrant
+          - kms:TagResource
+          - kms:UnTagResource
+          - kms:EnableKeyRotation
+          - kms:ListResourceTags
+          Effect: Allow
+          Principal:
+            AWS:
+            - !Join ['', [ 'arn:aws:iam::', !Ref 'AWS::AccountId', ':root']]
+            - '{{resolve:ssm:SCSMLaunchRoleArn:1}}'
+          Resource:
+          - '*'
+        Version: '2012-10-17'
+
+  KMSKeyIdAlias:
+    Type: AWS::KMS::Alias
+    DependsOn: KMSKeyId
+    Properties:
+      AliasName: !Sub "alias/${AWS::StackName}"
+      TargetKeyId: !Ref KMSKeyId
+  BasicNotebookInstanceLifecycleConfig:
+    Type: "AWS::SageMaker::NotebookInstanceLifecycleConfig"
+    Properties:
+      OnCreate:
+        - Content:
+            Fn::Base64: !Sub |
+              #!/bin/bash
+              set -e
+              ##TO FIX :  Need cross account access to copy models and data to the master (Tools) account.  The
+              ##Account ID below should be the Tools Account.
+              TOOLACCOUNTID=$(aws ssm get-parameter --name ToolsAccountID --query 'Parameter.Value' --output text)
+              echo "export tools_bucket_name=mlops-bia-data-model-$TOOLACCOUNTID " >> /etc/profile.d/jupyter-env.sh
+              echo "export tools_account_access_role_arn=arn:aws:iam::$TOOLACCOUNTID:role/AllowAccessToDataScienceAccountRole-$TOOLACCOUNTID" >> /etc/profile.d/jupyter-env.sh
+              initctl restart jupyter-server
+
+              sudo -i -u ec2-user bash << EOF
+              echo "Setup the Workshop exercises"
+
+              pwd
+              git clone https://github.com/sirimuppala/cross-account-mlops.git
+              pwd
+              ls -la
+              cp -R /home/ec2-user/cross-account-mlops/datascience-account/xgboost_abalone.ipynb /home/ec2-user/SageMaker/
+
+      OnStart:
+        - Content:
+            Fn::Base64:
+              !Sub |
+                #!/bin/bash
+                set -e
+                sudo -u ec2-user -i <<'EOF'
+                echo "THIS IS A PLACE HOLDER TO EXECUTE - USER LEVEL" >> ~/.customrc
+                EOF
+  SageMakerNotebookInstance:
+    Type: AWS::SageMaker::NotebookInstance
+    Properties:
+      KmsKeyId : !Ref 'KMSKeyId'
+      InstanceType: !FindInMap [InstanceSize, !Ref SagemakerInstance, size]
+      NotebookInstanceName: !Join ['', [!Ref 'AWS::StackName', '-NotebookInstance-', !Ref TeamName ]]
+      RoleArn: !GetAtt 'SageMakerExecutionRole.Arn'
+      LifecycleConfigName: !GetAtt 'BasicNotebookInstanceLifecycleConfig.NotebookInstanceLifecycleConfigName'
+      SubnetId: !Join ['', ['{{resolve:ssm:', !Ref TeamName, '-subnetId:1}}' ]]
+      SecurityGroupIds: 
+        - !Ref 'SagemakerSecurityGroup'
+
+Outputs:
+  SageMakerNoteBookURL:
+    Description: URL for the newly created SageMaker Notebook Instance
+    Value: !Sub 'https://${SageMakerNotebookInstance.NotebookInstanceName}.notebook.${AWS::Region}.sagemaker.aws/tree'
+  SageMakerNoteBookTerminalURL:
+    Description: Terminal access URL for the newly created SageMaker Notebook Instance
+    Value: !Sub 'https://${SageMakerNotebookInstance.NotebookInstanceName}.notebook.${AWS::Region}.sagemaker.aws/terminals/1'
+  BucketName:
+    Description: DataScientist S3 Bucket
+    Value: !Ref DataScientistS3Bucket

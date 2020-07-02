@@ -1,0 +1,90 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Prepare staging environment
+Parameters: 
+  ToolsAccountID:
+    Type: String
+    Description: AWS Account ID of the IT Tools account.
+  
+Resources:
+  S3DataModelBucket:
+    Type: AWS::S3::Bucket
+    Properties: 
+      AccessControl: BucketOwnerFullControl
+      VersioningConfiguration: 
+        Status: Enabled
+      BucketName:
+        Fn::Join:
+          - "-"
+          - - "mlops-bia-data-model"
+            - !Ref "AWS::AccountId"
+
+  AllowAccessToToolsAccountRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Principal:
+            AWS: !Ref ToolsAccountID
+          Action: sts:AssumeRole
+      Policies:
+        - PolicyName: crossaccountaccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource:
+                  Fn::Join:
+                    - ""
+                    - - !GetAtt S3DataModelBucket.Arn
+                      - "/"
+                      - "*"
+              - Effect: Allow
+                Action: sagemaker:*
+                Resource: "*"
+              - Effect: Allow
+                Action: iam:PassRole
+                Resource:
+                  Fn::Join:
+                    - ""
+                    - - 'arn:aws:iam::'
+                      - !Ref "AWS::AccountId"
+                      - ':role/SageMakerExecutionRole-'
+                      - !Ref "AWS::AccountId"
+      RoleName:
+        Fn::Join:
+          - "-"
+          - - "AllowAccessToToolsAccountRole"
+            - !Ref "AWS::AccountId"
+
+  SageMakerExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: sagemaker.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+      RoleName:
+        Fn::Join:
+          - "-"
+          - - "SageMakerExecutionRole"
+            - !Ref "AWS::AccountId"
+
+Outputs:
+  S3DataModelBucket:
+    Description: The ID of the S3 Bucket for model training and test data
+    Value: !Ref S3DataModelBucket
+  SageMakerExecutionRole:
+    Description: ARN of the sagemaker execution role
+    Value: !Ref SageMakerExecutionRole
+  AllowAccessToToolsAccountRole:
+    Description: ARN of the AllowAccessToToolsAccountRole
+    Value: !Ref AllowAccessToToolsAccountRole

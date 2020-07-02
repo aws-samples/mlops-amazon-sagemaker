@@ -1,0 +1,70 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: AWS SC Create a portfolio in Hub/Master and share it with Organizational Unit. (fdg-1pg71jh8q).
+
+Parameters:
+  SpokeAccountID:
+    Type: String
+    Description: The spoke account to share the portfolio with
+    AllowedPattern: '^[0-9]{12}$'
+    ConstraintDescription: Must be a 12-digit number
+
+Mappings:
+  S3RefLinks:
+    'SCSagemakerTemplate':
+      Location: 'https://marketplace-sa-resources.s3.amazonaws.com/scmlops/SageMakerProduct.yml'
+
+Resources:
+  MasterPortfolio:
+    Type: 'AWS::ServiceCatalog::Portfolio'
+    Properties:
+      AcceptLanguage: en
+      Description: Portfolio for Data Scientists
+      DisplayName: Data Scientists - Sample Portfolio
+      ProviderName: AWS
+
+  SagemakerProduct:
+    Type: 'AWS::ServiceCatalog::CloudFormationProduct'
+    Properties:
+      AcceptLanguage: en
+      Description: This product builds a secure Sagemaker notebook with preconfigure tools.
+      Distributor: AWS
+      Name: Amazon Secure Sagemaker
+      Owner: AWS
+      SupportEmail: email@mycompany.com
+      SupportUrl: 'https://www.mycompany.com'
+      SupportDescription: >-
+        This is a sample secure Sagemaker product taken from https://github.com/sirimuppala/cross-account-mlops/blob/master/servicecatalog-products/.
+      ProvisioningArtifactParameters:
+        - Description: This is version 1.0 of Secure SageMaker Notebook.
+          Name: Version - 1.0
+          Info:
+            LoadTemplateFromURL: !FindInMap [S3RefLinks, SCSagemakerTemplate, Location]
+
+  SagemakerProductAssociation:
+    DependsOn: 
+      - MasterPortfolio
+      - SagemakerProduct
+    Type: 'AWS::ServiceCatalog::PortfolioProductAssociation'
+    Properties:
+      AcceptLanguage: en
+      PortfolioId: !Ref MasterPortfolio
+      ProductId: !Ref SagemakerProduct
+
+  PortfolioShare:
+    Type: 'AWS::ServiceCatalog::PortfolioShare'
+    Properties:
+      AccountId: !Ref SpokeAccountID
+      PortfolioId: !Ref MasterPortfolio
+
+Outputs:
+  MasterPortfolioId:
+    Description: Portfolio Id 
+    Value: !Ref MasterPortfolio
+  SagemakerProductID:
+    Value: !Ref SagemakerProduct
+    Description: Sagemaker in Service Catalog Product Id
+  ToolsAccountID:
+    Description: Your Tools Account Id. AKA, AWS account where your SC masterportfolio reside
+    Value: !Ref AWS::AccountId

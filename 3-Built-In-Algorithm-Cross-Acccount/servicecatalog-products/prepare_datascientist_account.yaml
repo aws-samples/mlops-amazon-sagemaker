@@ -1,0 +1,419 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Sample spoke setup CloudFormation Template.(fdp-1oh0t5bfi)
+Mappings:
+  NetworkInfo:
+    VPC:
+      CIDR: '10.60.0.0/16'
+    Subnet1:
+      CIDR: '10.60.1.0/24'
+    Subnet2:
+      CIDR: '10.60.2.64/24'
+    Subnet3:
+      CIDR: '10.60.3.64/24'
+
+Parameters:
+  MasterPortfolioId:
+    Description: >-
+      SC Portfolio Id from the master account (port-012345678901).
+    Type: String
+    AllowedPattern: 'port-[A-Za-z0-9-]{13}'
+  SagemakerProductID:
+    Description: >-
+      Sagemaker product ID on the master account (prod-123456789012).
+    Type: String
+    AllowedPattern: 'prod-[A-Za-z0-9-]{13}'
+  ToolsAccountID:
+    Description: Tools AccountId from where the portfolio is shared
+    Type: String
+    AllowedPattern: '^[0-9]{12}$'
+    ConstraintDescription: Must be a 12-digit number
+
+Resources:
+  AcceptedPortfolioShare:
+    Type: 'AWS::ServiceCatalog::AcceptedPortfolioShare'
+    Properties:
+      AcceptLanguage: en
+      PortfolioId: !Ref MasterPortfolioId
+
+  SpokePortfolio:
+    Type: 'AWS::ServiceCatalog::Portfolio'
+    Properties:
+      AcceptLanguage: en
+      Description: This portfolio enables data scientists to deploy their services
+      DisplayName: Spoke Data Scientists Portfolio
+      ProviderName: CCOE
+  
+  PortfolioProductAssociation:
+    Type: 'AWS::ServiceCatalog::PortfolioProductAssociation'
+    DependsOn: AcceptedPortfolioShare
+    Properties:
+      AcceptLanguage: en
+      PortfolioId: !Ref SpokePortfolio
+      ProductId: !Ref SagemakerProductID
+      SourcePortfolioId: !Ref MasterPortfolioId
+
+  CostCenterTagOptionOne:
+    Type: 'AWS::ServiceCatalog::TagOption'
+    Properties:
+      Key: cost-center
+      Value: 8457
+
+  CostCenterAdminPortfolioTagOptionOneAssociation:
+    Type: 'AWS::ServiceCatalog::TagOptionAssociation'
+    Properties:
+      ResourceId: !Ref SpokePortfolio
+      TagOptionId: !Ref CostCenterTagOptionOne
+
+  CostCenterTagOptionTwo:
+    Type: 'AWS::ServiceCatalog::TagOption'
+    Properties:
+      Key: cost-center
+      Value: 6534
+
+  CostCenterAdminPortfolioTagOptionTwoAssociation:
+    Type: 'AWS::ServiceCatalog::TagOptionAssociation'
+    Properties:
+      ResourceId: !Ref SpokePortfolio
+      TagOptionId: !Ref CostCenterTagOptionTwo
+
+  SageMakerProductLaunchConstraint:
+    Type: 'AWS::ServiceCatalog::LaunchRoleConstraint'
+    DependsOn:
+      - SpokePortfolio
+      - SagemakerProductLaunchRole
+    Properties:
+      AcceptLanguage: en
+      Description: >-
+        This launch constraint ensures that analysts can launch Secure Sagemaker notebook
+        without minimum permissions
+      PortfolioId: !Ref SpokePortfolio
+      ProductId: !Ref SagemakerProductID
+      RoleArn: !GetAtt
+        - SagemakerProductLaunchRole
+        - Arn
+
+  SagemakerProductLaunchRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - servicecatalog.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
+        - arn:aws:iam::aws:policy/AmazonSSMFullAccess
+        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+      Path: /
+      Policies:
+        - PolicyName: SCLaunchPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: SCLaunchPolicySID
+                Effect: Allow
+                Action:      
+                  - "servicecatalog:ListServiceActionsForProvisioningArtifact"
+                  - "servicecatalog:ExecuteprovisionedProductServiceAction"
+                  - "iam:AddRoleToInstanceProfile"
+                  - "iam:ListRolePolicies"
+                  - "iam:ListPolicies"
+                  - "iam:DeleteRole"
+                  - "iam:GetRole"
+                  - "iam:CreateInstanceProfile"
+                  - "iam:PassRole"
+                  - "iam:DeleteInstanceProfile"
+                  - "iam:ListRoles"
+                  - "iam:ListUsers"
+                  - "iam:RemoveRoleFromInstanceProfile"
+                  - "iam:CreateRole"
+                  - "iam:DetachRolePolicy"
+                  - "iam:AttachRolePolicy"   
+                  - "iam:PutRolePolicy"
+                  - "iam:DeleteRolePolicy"
+                  - "iam:getRolePolicy"
+                  - "iam:ListRoleTags"
+                  - "iam:ListUserTags"
+                  - "kms:CreateGrant"
+                  - "kms:CreateKey"
+                  - "kms:DeleteAlias"
+                  - "kms:CreateAlias"
+                  - "kms:DeleteCustomKeyStore"
+                  - "kms:DeleteImportedKeyMaterial"
+                  - "kms:EnableKey"
+                  - "kms:EnableKeyRotation"
+                  - "kms:PutKeyPolicy"
+                  - "kms:ScheduleKeyDeletion"
+                  - "kms:UpdateAlias"
+                  - "kms:UpdateCustomKeyStore"
+                  - "kms:UpdateKeyDescription"
+                  - "cloudformation:DescribeStackResource"
+                  - "cloudformation:DescribeStackResources"
+                  - "cloudformation:GetTemplate"
+                  - "cloudformation:List*"
+                  - "cloudformation:DescribeStackEvents"
+                  - "cloudformation:DescribeStacks"
+                  - "cloudformation:CreateStack"
+                  - "cloudformation:DeleteStack"
+                  - "cloudformation:DescribeStackEvents"
+                  - "cloudformation:DescribeStacks"
+                  - "cloudformation:GetTemplateSummary"
+                  - "cloudformation:SetStackPolicy"
+                  - "cloudformation:ValidateTemplate"
+                  - "cloudformation:UpdateStack"     
+                  - "s3:GetObject"
+                Resource: '*'
+
+  SCSMLaunchRoleArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: SC Sagemaker Launch Constraint Role Arn
+      Name: SCSMLaunchRoleArn
+      Type: String
+      Value:
+        Fn::GetAtt:
+        - SagemakerProductLaunchRole
+        - Arn
+
+  DataScientistRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: DataScientist
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            AWS:
+              Fn::Sub:
+              - arn:aws:iam::${accountid}:root
+              - accountid:
+                  Ref: AWS::AccountId
+        Version: '2012-10-17'
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/AWSServiceCatalogEndUserFullAccess
+      - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+      Policies:
+        - PolicyName: SageMakerAccessInlinePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              Action:
+                - sagemaker:CreateModel
+                - sagemaker:DescribeTrainingJob
+                - sagemaker:DescribeLabelingJob
+                - sagemaker:DescribeModelPackage
+                - sagemaker:ListTransformJobs
+                - sagemaker:Search
+                - sagemaker:ListTrainingJobs
+                - sagemaker:DescribeAlgorithm
+                - sagemaker:UpdateEndpointWeightsAndCapacities
+                - sagemaker:UpdateCodeRepository
+                - sagemaker:DescribeTransformJob
+                - sagemaker:ListSubscribedWorkteams
+                - sagemaker:ListLabelingJobsForWorkteam
+                - sagemaker:CreateEndpoint
+                - sagemaker:ListAlgorithms
+                - sagemaker:CreateModelPackage
+                - sagemaker:ListNotebookInstanceLifecycleConfigs
+                - sagemaker:DeleteModel
+                - sagemaker:DescribeSubscribedWorkteam
+                - sagemaker:ListCompilationJobs
+                - sagemaker:DescribeHyperParameterTuningJob
+                - sagemaker:ListEndpointConfigs
+                - sagemaker:CreateEndpointConfig
+                - sagemaker:ListTrainingJobsForHyperParameterTuningJob
+                - sagemaker:DescribeEndpointConfig
+                - sagemaker:StopNotebookInstance
+                - sagemaker:RenderUiTemplate
+                - sagemaker:StopTransformJob
+                - sagemaker:ListWorkteams
+                - sagemaker:DescribeNotebookInstance
+                - sagemaker:CreateAlgorithm
+                - sagemaker:CreateTrainingJob
+                - sagemaker:DescribeNotebookInstanceLifecycleConfig
+                - sagemaker:StopHyperParameterTuningJob
+                - sagemaker:DeleteCodeRepository
+                - sagemaker:DeleteEndpoint
+                - sagemaker:DescribeEndpoint
+                - sagemaker:CreateTransformJob
+                - sagemaker:ListNotebookInstances
+                - sagemaker:InvokeEndpoint
+                - sagemaker:ListTags
+                - sagemaker:CreateCodeRepository
+                - sagemaker:DescribeModel
+                - sagemaker:StopTrainingJob
+                - sagemaker:ListHyperParameterTuningJobs
+                - sagemaker:ListModelPackages
+                - sagemaker:DescribeWorkteam
+                - sagemaker:UpdateEndpoint
+                - sagemaker:ListLabelingJobs
+                - sagemaker:DescribeCompilationJob
+                - sagemaker:GetSearchSuggestions
+                - sagemaker:CreatePresignedNotebookInstanceUrl
+                - sagemaker:StartNotebookInstance
+                - sagemaker:ListModels
+                - sagemaker:DescribeCodeRepository
+                - sagemaker:ListEndpoints
+                - sagemaker:ListCodeRepositories
+              Effect: Allow
+              Resource: '*'
+              Sid: VisualEditor0
+
+  PortfolioPrincipleAssociation:
+    Type: AWS::ServiceCatalog::PortfolioPrincipalAssociation
+    Properties:
+      PortfolioId:
+        Ref: SpokePortfolio
+      PrincipalARN:
+        Fn::GetAtt:
+        - DataScientistRole
+        - Arn
+      PrincipalType: IAM
+    
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      CidrBlock: !FindInMap ['NetworkInfo', 'VPC', 'CIDR']
+
+  Subnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+         Fn::Select:
+         - 0
+         - Fn::GetAZs: {Ref: 'AWS::Region'}
+      VpcId: !Ref 'VPC'
+      CidrBlock: !FindInMap ['NetworkInfo', 'Subnet1', 'CIDR']
+      MapPublicIpOnLaunch: true
+
+  Subnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+         Fn::Select:
+         - 1
+         - Fn::GetAZs: {Ref: 'AWS::Region'}
+      VpcId: !Ref 'VPC'
+      CidrBlock: !FindInMap ['NetworkInfo', 'Subnet2', 'CIDR']
+      MapPublicIpOnLaunch: true
+
+  Subnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+         Fn::Select:
+         - 2
+         - Fn::GetAZs: {Ref: 'AWS::Region'}
+      VpcId: !Ref 'VPC'
+      CidrBlock: !FindInMap ['NetworkInfo', 'Subnet3', 'CIDR']
+      MapPublicIpOnLaunch: true
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  GatewayAttachement:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref 'VPC'
+      InternetGatewayId: !Ref 'InternetGateway'
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref 'VPC'
+
+  DefaultGateway:
+    Type: AWS::EC2::Route
+    DependsOn: GatewayAttachement
+    Properties:
+      RouteTableId: !Ref 'PublicRouteTable'
+      DestinationCidrBlock: '0.0.0.0/0'
+      GatewayId: !Ref 'InternetGateway'
+
+  Subnet1RTA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  Subnet2RTA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  Subnet3RTA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet3
+      RouteTableId: !Ref PublicRouteTable
+
+  PrivateSubnetAId:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Subnet for forecasting team
+      Name: forecasting-subnetId
+      Type: String
+      Value: !Ref Subnet1
+
+  PrivateSubnetBId:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Subnet for sentiment-analysis team
+      Name: sentiment-analysis-subnetId
+      Type: String
+      Value: !Ref Subnet2
+
+  PrivateSubnetCId:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Subnet for mnist team
+      Name: mnist-subnetId
+      Type: String
+      Value: !Ref Subnet3
+
+  VPCA:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Subnet for forecasting team
+      Name: forecasting-vpc
+      Type: String
+      Value: !Ref VPC
+
+  VPCB:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Subnet for sentiment-analysis team
+      Name: sentiment-analysis-vpc
+      Type: String
+      Value: !Ref VPC
+
+  VPCC:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Subnet for mnist team
+      Name: mnist-vpc
+      Type: String
+      Value: !Ref VPC
+
+  ToolsAccount:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: ToolsAccount number
+      Name: ToolsAccountID
+      Type: String
+      Value: !Ref ToolsAccountID
+
+Outputs:
+  SwitchRoleLink:
+    Description: URL to switch role as Data Science user
+    Value: !Join ['', ['https://signin.aws.amazon.com/switchrole?account=', !Ref 'AWS::AccountId', '&roleName=', !Ref 'DataScientistRole', '&displayName=DataScientistRole']]
