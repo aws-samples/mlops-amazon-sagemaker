@@ -26,6 +26,14 @@ This repository demonstrates the following use cases covering reference pipeline
 
 * **[Reference Pipeline #2:](/2-Bring-Your-Own/README.md)** Pipeline using Amazon Sagemaker and bring-your-own algorithm
 
+* **[Reference Pipeline #3:](/3-Built-In-Algorithm-Cross-Acccount/README.md)** Cross Account Pipeline using Amazon Sagemaker and built-in algorithm
+
+## Other Resources
+
+The following workshops/code samples also provide patterns for implementing MLOps practices on AWS: 
+
+* **Amazon SageMaker Safe Deployment Pipeline**: [Pipeline](https://github.com/aws-samples/amazon-sagemaker-safe-deployment-pipeline) showcasing safe deployments using A/B testing with consumable API 
+
 ## License
 
 This library is licensed under the Apache 2.0 License. 
