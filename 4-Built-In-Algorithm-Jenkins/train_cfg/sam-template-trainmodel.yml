@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion : '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Sam Template - Deploy TrainModel Lambda Function 
+
+Parameters: 
+  S3PackagedLambdaCode: 
+    Type: String
+  LambdaExecutionRoleTest: 
+    Type: String
+  SageMakerExecutionRoleTest: 
+    Type: String
+  SSEKMSKeyIdTest:
+    Type: String
+ 
+Resources:
+  TrainLambdaFunction:
+    Type: "AWS::Lambda::Function"
+    Properties: 
+      Handler: "MLOps-Jenkins-TrainModel.lambda_handler"
+      Role: !Ref LambdaExecutionRoleTest
+      Environment: 
+        Variables:
+          SageMakerExecutionRole: !Ref SageMakerExecutionRoleTest
+          SSEKMSKeyIdIn: !Ref SSEKMSKeyIdTest
+      FunctionName: "MLOps-Jenkins-TrainModel-ScikitBYO"
+      Code:
+        S3Bucket: !Ref S3PackagedLambdaCode
+        S3Key: "MLOps-Jenkins-TrainModel.zip"
+      Runtime: "python3.6"
