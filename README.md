@@ -28,6 +28,8 @@ This repository demonstrates the following use cases covering reference pipeline
 
 * **[Reference Pipeline #3:](/3-Built-In-Algorithm-Cross-Acccount/README.md)** Cross Account Pipeline using Amazon Sagemaker and built-in algorithm
 
+* **[Reference Pipeline #4:](/4-Built-In-Algorithm-Jenkins/README.md)** Pipeline using Jenkins with Amazon SageMaker built-in algorithm
+
 ## Other Resources
 
 The following workshops/code samples also provide patterns for implementing MLOps practices on AWS: 
