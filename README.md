@@ -52,7 +52,10 @@ Resources/Labs:
 
 * Automated workflows using the [AWS Step Functions Data Science Python SDK](https://docs.aws.amazon.com/step-functions/latest/dg/concepts-python-sdk.html)
   
-  * [Hands-on Examples](https://github.com/aws/amazon-sagemaker-examples/tree/master/step-functions-data-science-sdk)
+  * [Hands-on SageMaker Example Notebooks](https://github.com/aws/amazon-sagemaker-examples/tree/master/step-functions-data-science-sdk)
+  * [Bring-Your-Own Mask R-CNN](https://github.com/aws-samples/aws-stepfunctions-byoc-mlops-using-data-science-sdk)
+  
+* [Triggering Automated StepFunction workflows using CodePipeline](https://github.com/aws-samples/aws-codepipeline-stepfunctions)
 
 * Self Service Governed [Data Science Sandbox Environments](https://aws.amazon.com/blogs/mt/enable-self-service-secured-data-science-using-amazon-sagemaker-notebooks-and-aws-service-catalog/)
 
@@ -96,6 +99,7 @@ Resources/Labs:
 * [Bring-Your-Own-Algorithm - Simple Pipeline](/2-Bring-Your-Own/README.md): Simple pipeline to build a SageMaker compatible docker image, then train and deploy a model built using scikit along with CodePipeline, CodeBuild, CloudFormation, StepFunctions & Lambda. 
 * [Built-In-Algorithm - Jenkins Pipeline](/4-Built-In-Algorithm-Jenkins/README.md): Simple Jenkins pipeline to train and deploy a model built using SageMaker's XGBoost built-in-algorithm.
 * [Built-In-Algorithm - Advanced Blue/Green Deployment Pipeline](https://github.com/aws-samples/amazon-sagemaker-safe-deployment-pipeline): Pipeline using SageMaker features such as Experiments & Model Monitor as well as building a pipeline to train and deploy a model built using SageMaker's XGBoost built-in-algorithm. 
+* [MLOps Workshop - End-to-End Builders Workshop](https://operational-machine-learning-pipeline.workshop.aws/module_introduction_1.html)
 
 **Optimized** 
 
