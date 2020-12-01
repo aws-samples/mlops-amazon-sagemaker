@@ -100,6 +100,9 @@ Resources/Labs:
 * [Built-In-Algorithm - Jenkins Pipeline](/4-Built-In-Algorithm-Jenkins/README.md): Simple Jenkins pipeline to train and deploy a model built using SageMaker's XGBoost built-in-algorithm.
 * [Built-In-Algorithm - Advanced Blue/Green Deployment Pipeline](https://github.com/aws-samples/amazon-sagemaker-safe-deployment-pipeline): Pipeline using SageMaker features such as Experiments & Model Monitor as well as building a pipeline to train and deploy a model built using SageMaker's XGBoost built-in-algorithm. 
 * [MLOps Workshop - End-to-End Builders Workshop](https://operational-machine-learning-pipeline.workshop.aws/module_introduction_1.html)
+* [SageMaker Pipelines](https://github.com/aws/amazon-sagemaker-examples/tree/master/sagemaker-pipelines)
+
+* **Additional Workshops/Labs for SAGEMAKER PIPELINES - ReInvent 2020 - Coming soon!** 
 
 **Optimized** 
 
