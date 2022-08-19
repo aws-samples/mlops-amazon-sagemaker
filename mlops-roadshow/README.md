@@ -10,7 +10,7 @@ Building an MLOps foundation that can cover the operations, people, and technolo
 enterprise customers is challenging. Therefore, we define the following maturity model 
 that defines the necessary capabilities of MLOps in four key phases.
 
-![MLOPs stages of adoption](images/mlops-stages-of-adoption1.png)
+![MLOPs stages of adoption](pipeline_scripts/images/mlops-stages-of-adoption1.png)
 
 Each stage represents practices that align to the increased adoption of MLOps 
 practices to move from a project or repeatable stage to adopting ML workloads 
