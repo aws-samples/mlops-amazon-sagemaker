@@ -1,7 +1,11 @@
+# Ensure latest version of SageMaker
+import os
+os.system("pip install -U sagemaker")
 
 import argparse
 import numpy as np
 import os
+import boto3
 import pandas as pd
 import re
 import joblib
@@ -10,7 +14,9 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 import logging
 from io import StringIO
-
+# Experiments
+from sagemaker.session import Session
+from sagemaker.experiments.run import load_run
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -44,6 +50,9 @@ def parse_args():
 
     # model directory: we will use the default set by SageMaker, /opt/ml/model
     parser.add_argument('--model_dir', type=str, default=os.environ.get('SM_MODEL_DIR'))
+    
+    # parse region
+    parser.add_argument('--region', type=str, default='us-west-2')
 
     return parser.parse_known_args()
 
@@ -52,17 +61,30 @@ def load_dataset(path, target_col):
     '''
     Load dataset.
     '''
-    
     if 'train' in path:
         df_train = pd.read_csv(os.path.join(path, 'train.csv'))
-        x_train = df_train.drop(columns=[target_col])
-        y_train = df_train[target_col]
+        try:
+            x_train = df_train.drop(columns=[target_col])
+        except:
+            # Assuming first column is target so drop it
+            x_train = df_train.drop(df_train.columns[0], axis=1)
+        try:
+            y_train = df_train[target]
+        except:
+            y_train = df_train[df_train.columns[0]]
         logger.info(f'x train: {x_train.shape}, y train: {y_train.shape}')
         return x_train, y_train
     else:
         df_validation = pd.read_csv(os.path.join(path, 'validation.csv'))
-        x_validation = df_validation.drop(columns=[target_col])
-        y_validation = df_validation[target_col]
+        try:
+            x_validation = df_validation.drop(columns=[target_col])
+        except:
+            # Assuming first column is target so drop it
+            x_validation = df_validation.drop(df_validation.columns[0], axis=1)
+        try:
+            y_validation = df_validation[target_col]
+        except:
+            y_validation = df_validation[df_validation.columns[0]]
         logger.info(f'x validation: {x_validation.shape}, y validation: {y_validation.shape}')
         return x_validation, y_validation
 
@@ -73,6 +95,8 @@ def input_fn(request_body, request_content_type):
     '''
     if request_content_type == 'text/csv':
         df = pd.read_csv(StringIO(request_body))
+        if df.shape[0] == 0:
+            df = pd.read_csv(StringIO(request_body), header=None)
         if len(df.columns) == 9: # dataframe contains target
             df = df.iloc[: , :-1] # drop last column
         return df
@@ -111,10 +135,23 @@ def start(args):
     model = RandomForestRegressor()
     model.set_params(**hyperparameters)
     model.fit(X_train, y_train)
-    print('r-squared: {}'.format(model.score(X_validation, y_validation)))
+    r_squared = model.score(X_validation, y_validation)
+    print('r-squared: {}'.format(r_squared))
     mse = mean_squared_error(y_validation, model.predict(X_validation))
     print('MSE: {}'.format(mse))
     joblib.dump(model, os.path.join(args.model_dir, 'model.joblib'))
+    
+    # Track experiment
+    session = Session(boto3.session.Session(region_name=args.region))
+    local_testing = False
+    try:
+        load_run(sagemaker_session=session)
+    except:
+        local_testing = True
+    if not local_testing: # Track experiment if using SageMaker Training
+        with load_run(sagemaker_session=session) as run:
+            run.log_metric('r-squared', r_squared)
+            run.log_metric('mse', mse)
 
 
 if __name__ == '__main__':
