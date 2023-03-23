@@ -4,7 +4,7 @@ from sagemaker.model_metrics import ModelMetrics, MetricsSource
 
 
 def create_model_package_group(model_package_group_name, model_package_group_description, sagemaker_session):
-    sagemaker_client = sagemaker_session.session.sagemaker_client
+    sagemaker_client = sagemaker_session.sagemaker_client
 
     # Check if model package group already exists
     model_package_group_exists = False
@@ -21,7 +21,7 @@ def create_model_package_group(model_package_group_name, model_package_group_des
         print(f'{model_package_group_name} Model Package Group already exists')
 
 
-def create_training_job_metrics(estimator, s3_prefix, sagemaker_session, problem_type='regression'):
+def create_training_job_metrics(estimator, s3_prefix, region, bucket_name, problem_type='regression'):
     # Define supervised learning problem type
     if problem_type == 'regression':
         model_metrics_report = {'regression_metrics': {}}
@@ -43,9 +43,9 @@ def create_training_job_metrics(estimator, s3_prefix, sagemaker_session, problem
         json.dump(model_metrics_report, f)
     
     training_metrics_s3_prefix = f'{s3_prefix}/training_jobs/{training_job_name}/training_metrics.json'
-    s3_client = boto3.client('s3', region_name=sagemaker_session.region)
-    s3_client.upload_file(Filename='training_metrics.json', Bucket=sagemaker_session.bucket_name, Key=training_metrics_s3_prefix)
-    training_metrics_s3_uri = f's3://{sagemaker_session.bucket_name}/{training_metrics_s3_prefix}'
+    s3_client = boto3.client('s3', region_name=region)
+    s3_client.upload_file(Filename='training_metrics.json', Bucket=bucket_name, Key=training_metrics_s3_prefix)
+    training_metrics_s3_uri = f's3://{bucket_name}/{training_metrics_s3_prefix}'
     model_statistics = MetricsSource('application/json', training_metrics_s3_uri)
     model_metrics = ModelMetrics(model_statistics=model_statistics)
     return model_metrics
