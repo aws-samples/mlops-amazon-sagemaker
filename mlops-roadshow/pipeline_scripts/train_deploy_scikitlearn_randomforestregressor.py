@@ -32,14 +32,14 @@ def parse_args():
     try:
         from sagemaker_training import environment
         env = environment.Environment()
-        parser.add_argument('--n-jobs', type=int, default=env.num_cpus)
+        parser.add_argument('--n_jobs', type=int, default=env.num_cpus)
     except:
-        parser.add_argument('--n-jobs', type=int, default=4)
+        parser.add_argument('--n_jobs', type=int, default=4)
 
 
     # hyperparameters sent by the client are passed as command-line arguments to the script
-    parser.add_argument('--max-depth', type=int, default=10)
-    parser.add_argument('--n-estimators', type=int, default=120)
+    parser.add_argument('--max_depth', type=int, default=10)
+    parser.add_argument('--n_estimators', type=int, default=120)
     
     # read target col
     parser.add_argument('--target_col', type=str, default='price')
