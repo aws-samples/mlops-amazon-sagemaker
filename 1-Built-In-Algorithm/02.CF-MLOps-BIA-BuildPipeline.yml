@@ -354,7 +354,7 @@ Resources:
       Code:
         S3Bucket: !Ref LambdaFunctionsBucket
         S3Key: "MLOps-BIA-TrainModel.py.zip"
-      Runtime: "python3.6"
+      Runtime: "python3.9"
       Timeout: 900
 
   DeployLambdaFunction:
@@ -374,7 +374,7 @@ Resources:
       Code:
         S3Bucket: !Ref LambdaFunctionsBucket
         S3Key: "MLOps-BIA-DeployModel.py.zip"
-      Runtime: "python3.6"
+      Runtime: "python3.9"
       Timeout: 900
 
   GetStatusLambdaFunction:
@@ -394,7 +394,7 @@ Resources:
       Code:
         S3Bucket: !Ref LambdaFunctionsBucket
         S3Key: "MLOps-BIA-GetStatus.py.zip"
-      Runtime: "python3.6"
+      Runtime: "python3.9"
       Timeout: 900
 
   EvaluateModelLambdaFunction:
@@ -415,7 +415,7 @@ Resources:
       Code:
         S3Bucket: !Ref LambdaFunctionsBucket 
         S3Key: "MLOps-BIA-EvaluateModel.py.zip"
-      Runtime: "python3.6"
+      Runtime: "python3.9"
       Timeout: 900
 
   LambdaExecutionRole:
@@ -432,7 +432,7 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
         - arn:aws:iam::aws:policy/CloudWatchFullAccess
-        - arn:aws:iam::aws:policy/AWSCodePipelineFullAccess
+        - arn:aws:iam::aws:policy/AWSCodePipeline_FullAccess
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       RoleName: 
        Fn::Join:
